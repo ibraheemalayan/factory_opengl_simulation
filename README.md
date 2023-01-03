@@ -102,8 +102,3 @@ set follow-exec-mode new
 #### UI
 
 * [ ] UI TODOs
-
-
-
-
-# factory_opengl_simulation

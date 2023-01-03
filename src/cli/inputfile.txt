@@ -1,0 +1,2 @@
+peopleUntil8am 20 50
+peopleAfter8amUntil1pm 20 50

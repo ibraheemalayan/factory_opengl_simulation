@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "include.h": "c",
+        "types.h": "c",
+        "ui_helper.h": "c",
+        "constants.h": "c",
+        "glut.h": "c",
+        "local.h": "c"
+    }
+}
