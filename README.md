@@ -39,7 +39,7 @@ to make the project portable, [Docker](https://www.docker.com) containers were u
     mkdir src/bin
     ```
 
-if inside a desktop linux VM, you can run the makeFile, the next steps are intended for docker installtion
+> if working inside a desktop linux VM, you are ready to run the makeFile, the following steps are intended for docker installtion
 
 2. (docker insalltion only) setup the container
     * windows
