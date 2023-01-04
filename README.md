@@ -6,7 +6,7 @@ A multi-threaded multi-processing application that simulates simulates the behav
 
 ## Demo
 
-
+TODO
 <!-- TODO Demo Video -->
 
 
@@ -62,12 +62,14 @@ to make the project portable, [Docker](https://www.docker.com) containers were u
 
 Available make commands:
 
+> FIXME ( update those commands )
 * `make run <num_of_rounds>` - run the project in gui mode
 * `make run_gui` - run the standalone gui code with default number of rounds and random speeds **(for testing)**
 * `make run_cli <num_of_rounds>` - run the project in cli mode without gui **(for testing)**
 
 Debugging (GDB)
 
+> FIXME ( update those commands )
 * `make debug <num_of_rounds>` - run the project inside gdb
 * `make debug_cli <num_of_rounds>` - run the project in cli mode without gui inside gdb **(for testing)**
 * `make debug_gui` - run the project in gui mode inside gdb **(for testing)**
@@ -93,7 +95,7 @@ set follow-exec-mode new
 
 #### Project
 
-* [ ] solve ui slowness issue in ubuntu
+* [ ] Project TODOs
 
 #### Backend
 
