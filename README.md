@@ -19,9 +19,14 @@ TODO
 to make the project portable, [Docker](https://www.docker.com) containers were used as a runtime enviroment.
 
 ### Prerequisites ✅
-* Docker : to make the project portable, [Docker](https://www.docker.com) containers were used as a runtime enviroment.
+* To run in a docker container
+    
+    * Docker : to make the project portable, [Docker](https://www.docker.com) containers were used as a runtime enviroment.
 
-* VNC client
+    * VNC client
+    
+* To run in a virtual machine
+    * just a desktop linux
 
 ### Setup ⚙️
 
@@ -34,8 +39,9 @@ to make the project portable, [Docker](https://www.docker.com) containers were u
     mkdir src/bin
     ```
 
+if inside a desktop linux VM, you can run the makeFile, the next steps are intended for docker installtion
 
-2. setup the container
+2. (docker insalltion only) setup the container
     * windows
         ```bash
         bash windows_setup.sh
