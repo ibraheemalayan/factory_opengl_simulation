@@ -64,7 +64,7 @@ void readInputFile(){
         size_t len = 0;
         ssize_t read;
 
-        fp = fopen("inputfile.txt", "r");
+        fp = fopen("cli/inputfile.txt", "r");
         if (fp == NULL)
                 exit(EXIT_FAILURE);
         int lineNumber = 0;

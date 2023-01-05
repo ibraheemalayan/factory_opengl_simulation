@@ -33,13 +33,13 @@ debug_gui: compile_gui_debug;
 compile_all:
 	@echo "Compiling..."
 	gcc -pthread cli/main.c -o bin/main.o
-	gcc -pthread cli/child.c -o bin/child.o
+#	gcc -pthread cli/child.c -o bin/child.o
 	gcc ui/ui.c -lGL -lGLU -lglut -lm -o bin/gui.o
 
 compile_all_for_debug:
 	@echo "Compiling..."
 	gcc -g -pthread cli/main.c -o bin/d_main.o
-	gcc -g -pthread cli/child.c -o bin/d_child.o
+#	gcc -g -pthread cli/child.c -o bin/d_child.o
 	gcc -g ui/ui.c -lGL -lGLU -lglut -lm -o bin/d_gui.o
 
 run_all: compile_all;
