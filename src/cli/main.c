@@ -22,24 +22,54 @@ int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC =0;
 
 int g_time_to_end_simulation_in_minutes=0;
 
+//Arrays of threads
+//Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
+pthread_t g_Array_of_Threads_TypeA[3][8];
+//Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeB
+pthread_t g_Array_of_Threads_TypeB[2][6];
+//Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC
+pthread_t g_Array_of_Threads_TypeC[2][5];
+
+int g_number_of_threads_per_project =0;
+
+
 //.................Functions....................
-void createThreads();
-void simulation();
 void readInputFile();
+void simulation();
+void printStartSimulation();
+void createThreads();
+void createThreadsForEmpsOfTypeA();
+void createThreadsForEmpsOfTypeB();
+void createThreadsForEmpsOfTypeC();
+int randomIntegerInRange(int lower, int upper);
+void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
+
 
 
 void main(){
         simulation();
 
 }
-void createThreads(){
 
+void simulation(){
+        printStartSimulation();
+        readInputFile();
+        createThreads();
+}
+void printStartSimulation(){
+
+}
+void createThreads(){
 //Minimum number of threads 56 !?
+
 /*number of threads for employess of producing the chocolate products in the 7 lines : 46 threads
         TypeA : 3*8 =24
         TypeB : 2*6 =12
         TypeC : 2*5 =10
 */
+createThreadsForEmpsOfTypeA();
+createThreadsForEmpsOfTypeB();
+createThreadsForEmpsOfTypeC();
 
 /* number of threads for employess of collect_chocolate_in_patches_of_10_pieces_per_type_and_sent_to_printing_the_expiration_date : 2 */
 // What about printing_the_expiration_date line 8 should be as thread //!?
@@ -50,12 +80,54 @@ void createThreads(){
 
 /* number of threads for storage employess to_move_the_filled_carton_boxes_and_place_them_in_the_storge_area 2 */
 //Storage area == Queue //!?
+}
+void createThreadsForEmpsOfTypeA(){
+     int i,j,time_for_emp_takes_to_finsh_step_per_line_A; 
+    for (j=0;j<g_number_of_manufacturing_lines_to_produce_the_chocolate_typeA;j++){        
+        for(i=0;i<g_number_of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA;i++){
+                time_for_emp_takes_to_finsh_step_per_line_A = randomIntegerInRange(g_min_time_for_Each_step_typeA,g_max_time_for_Each_step_typeA);
+                pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employeeDoStepPerLine, (void *)&time_for_emp_takes_to_finsh_step_per_line_A);
+                pthread_join(g_Array_of_Threads_TypeA[j][i], NULL);
+                g_number_of_threads_per_project++;
+                printf("\n%d\n",g_number_of_threads_per_project);
+        }
+    } 
 
 }
 
-void simulation(){
-        readInputFile();
-        createThreads();
+void createThreadsForEmpsOfTypeB(){
+     int i,j,time_for_emp_takes_to_finsh_step_per_line_B; 
+    for (j=0;j<g_number_of_manufacturing_lines_to_produce_the_chocolate_typeB;j++){        
+        for(i=0;i<g_number_of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeB;i++){
+                time_for_emp_takes_to_finsh_step_per_line_B = randomIntegerInRange(g_min_time_for_Each_step_typeB,g_max_time_for_Each_step_typeB);
+                pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employeeDoStepPerLine, (void *)&time_for_emp_takes_to_finsh_step_per_line_B);
+                pthread_join(g_Array_of_Threads_TypeB[j][i], NULL);
+                g_number_of_threads_per_project++;
+                printf("\n%d\n",g_number_of_threads_per_project);
+        }
+    } 
+
+}
+
+void createThreadsForEmpsOfTypeC(){
+     int i,j,time_for_emp_takes_to_finsh_step_per_line_C; 
+    for (j=0;j<g_number_of_manufacturing_lines_to_produce_the_chocolate_typeC;j++){        
+        for(i=0;i<g_number_of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC;i++){
+                time_for_emp_takes_to_finsh_step_per_line_C = randomIntegerInRange(g_min_time_for_Each_step_typeC,g_max_time_for_Each_step_typeC);
+                pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employeeDoStepPerLine, (void *)&time_for_emp_takes_to_finsh_step_per_line_C);
+                pthread_join(g_Array_of_Threads_TypeC[j][i], NULL);
+                g_number_of_threads_per_project++;
+                printf("\n%d\n",g_number_of_threads_per_project);
+        }
+    } 
+
+}
+
+void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line){
+        
+        int time = *((int *)time_for_emp_takes_to_finsh_step_per_line);
+        //printf("\n%d\n",time);
+        sleep(time);
 }
 
 void readInputFile(){
@@ -188,4 +260,10 @@ void readInputFile(){
         }
 
         fclose(fp);
+}
+
+int randomIntegerInRange(int lower, int upper)
+{
+    srand(time(NULL)); // randomize seed
+    return (rand() % (upper - lower + 1)) + lower;
 }
