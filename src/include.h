@@ -28,61 +28,97 @@
 
 enum MsgType
 {
-  PersonEntered = 1,
-  PersonUpdated,
-  PersonExitedSatisfied,
-  PersonExitedUnsatisfied,
-  PersonExitedUnserved,
+  ITEM = 1,
+  NEWPATCH,
+  NEWBOX,
+  NEWTRUCK,
+
+  PATCHUPDATED,
+  BOXUPDATED,
+  ITEMUPDATED,
+  TRUCKUPDATED,
 };
 
-enum DocumentType
+enum ItemType
 {
-  BirthCertificate = 0,
-  TravelDocument,
-  FamilyReunion,
-  IDRelatedProblems
+  PRODUCT = 1,
+  PATCH,
+  CARTON_BOX,
 };
 
-enum Gender
+enum ChocolateType
 {
-  Male = 1,
-  Female = 2
+  TYPE_A = 1,
+  TYPE_B,
+  TYPE_C,
+
 };
 
+// the order of the enum values is important !
+// ! DO NOT CHANGE THE ORDER !
 enum Location
 {
   UNDEFINED = 0,
-  MaleOutsideGatesArea = 1,
-  FemaleOutsideGatesArea = 2,
-  MaleMetalDetectorQueue = 3,
-  FemaleMetalDetectorQueue = 4,
-  MetalDetector = 5,
-  InnerGroupingArea = 6,
-  BxTellerQ = 7,
-  IxTellerQ = 8,
-  TxTellerQ = 9,
-  RxTellerQ = 10,
-  BxTeller = 11,
-  IxTeller = 12,
-  TxTeller = 13,
-  RxTeller = 14,
-  LeaveHappy = 15,
-  LeaveUnhappy = 16
+
+  // manufacturing lines
+  MANUFACTURING_LINE_A1,
+  MANUFACTURING_LINE_A2,
+  MANUFACTURING_LINE_A3,
+
+  MANUFACTURING_LINE_B1,
+  MANUFACTURING_LINE_B2,
+
+  MANUFACTURING_LINE_C1,
+  MANUFACTURING_LINE_C2,
+
+  // patching
+  PATCHING_A,
+  PATCHING_B,
+  PATCHING_C,
+
+  // printing
+  PRINTER,
+
+  // containers
+  CONTAINER_A,
+  CONTAINER_B,
+  CONTAINER_C,
+
+  // carton boxes
+  CARTON_BOX_A,
+  CARTON_BOX_B,
+  CARTON_BOX_C,
+
+  // storage
+  STORAGE_AREA_A,
+  STORAGE_AREA_B,
+  STORAGE_AREA_C,
+
+  // trucks
+  TRUCK_1,
+  TRUCK_2,
+  TRUCK_3,
+
+  // removed from the screen
+  DELIVERED
+
 };
 
 typedef enum Location Location;
-typedef enum Gender gender;
 typedef enum MsgType MsgType;
-typedef enum DocumentType DocumentType;
+typedef enum ChocolateType ChocolateType;
+typedef enum ItemType ItemType;
 
 struct message_payload
 {
   long msg_type; // first field of the message struct should be the message type
-  int person_pid;
-  float angriness;
-  gender gender;
-  int index_in_queue; // index if inside a queue
+  int id;
+  int index; // index if inside a queue
   Location current_location;
+  ChocolateType chocolate_type;
+  ItemType item_type;
+  // used to delete items when turned into another object
+  int ids_to_delete[10]; // can be ids of items, patches, boxes
 };
 
 typedef struct message_payload message_payload;

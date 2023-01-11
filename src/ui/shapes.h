@@ -8,9 +8,10 @@
 
 void reshape(int, int);
 void background();
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B);
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color);
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B);
-void draw_person(Person *p);
+
+void draw_item(Item *item);
 void drawMetalDetector();
 void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
 
@@ -23,7 +24,7 @@ void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
  *	y (GLFloat) - the y position of the center point of the circle
  *	radius (GLFloat) - the radius that the painted circle will have
  */
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
 {
     int i;
     int triangleAmount = 30; // # of triangles used to draw circle
@@ -32,7 +33,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
     GLfloat twicePi = 2.0f * M_PI;
 
     glBegin(GL_TRIANGLE_FAN);
-    glColor3ub(R, G, B);
+    glColor3ubv(color);
     glVertex2f(x, y); // center of circle
     for (i = 0; i <= triangleAmount; i++)
     {
@@ -43,23 +44,45 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
     glEnd();
 }
 
-void draw_person(Person *p)
+void draw_item(Item *item)
 {
 
-    if (p->gender == Male)
+    GLubyte *color = NULL;
+    switch (item->chocolate_type)
     {
+    case TYPE_A:
+        color = TYPE_A_COLOR_RGB_V;
+        break;
+
+    case TYPE_B:
+        color = TYPE_B_COLOR_RGB_V;
+        break;
+
+    case TYPE_C:
+        color = TYPE_C_COLOR_RGB_V;
+        break;
+    }
+
+    switch (item->pkg_type)
+    {
+    case PRODUCT:
+        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color);
+        break;
+
+    case PATCH:
         glBegin(GL_TRIANGLES);
-        glColor3ub(255 * p->angriess, 0, 0);
-        glVertex2f(p->current_coords.x + 15, p->current_coords.y - 15);
-        glVertex2f(p->current_coords.x - 15, p->current_coords.y - 15);
-        glVertex2f(p->current_coords.x, p->current_coords.y + 15);
+        glColor3ubv(color);
+        glVertex2f(item->current_coords.x + 15, item->current_coords.y - 15);
+        glVertex2f(item->current_coords.x - 15, item->current_coords.y - 15);
+        glVertex2f(item->current_coords.x, item->current_coords.y + 15);
         glEnd();
+        break;
+
+    case CARTON_BOX:
+        draw_rectangle(item->current_coords.x, item->current_coords.y, 30, 30, color[0], color[1], color[2]);
+        break;
     }
-    else
-    {
-        drawFilledCircle(p->current_coords.x, p->current_coords.y, 15, 255 * p->angriess, 0, 0);
-    }
-};
+}
 
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B)
 {
@@ -91,7 +114,7 @@ void draw_walls()
     draw_rectangle(wall_x, gate_2_top_y, wall_thickness, gate_1_bottom_y - gate_2_top_y, R, G, B);
 
     // middle wall
-    draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
+    // draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
 
     // ****************************
     // Metal Detector Wall
@@ -156,7 +179,7 @@ void reshape(int width, int height)
 
     // regardless the width & the height, do not change the viewport
 
-    glViewport(0, 0, 1400, 700);
+    glViewport(0, 0, 900, 450);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(-1250, 750, -500, 500); // left, right, bottom, top
