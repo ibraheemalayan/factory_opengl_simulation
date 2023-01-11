@@ -3,6 +3,8 @@
 src/.idea
 src/bin/*.o
 
+*.bin
+
 # Prerequisites
 *.d
 
