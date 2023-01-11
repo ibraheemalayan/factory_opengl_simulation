@@ -11,41 +11,43 @@ struct Coordinations
 
 typedef struct Coordinations Coordinates;
 
-struct Queue
+struct LocationObject
 {
     Coordinates coords;
-    int current_people;
+    int current_items;
     float width;
     float height;
 };
 
-typedef struct Queue Queue;
+typedef struct LocationObject LocationObject;
 
-struct Person
+struct Item
 {
     int id;
+    ItemType pkg_type;
+    ChocolateType chocolate_type;
+
     Coordinates current_coords;
     Coordinates destination_coords;
-    float angriess; // current waited time out of max patience
-    float speed;
-    gender gender;
-    int index_in_queue;
-    Queue *current_queue;
-};
-typedef struct Person Person;
 
-void print_person(Person *person)
+    int index_in_queue;
+    LocationObject *current_location;
+};
+typedef struct Item Item;
+
+void print_item(Item *item)
 {
-    printf("{ id: %d, gender: %d, index: %d, q: %p, anger: %f, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",
-           person->id,
-           person->gender,
-           person->index_in_queue,
-           person->current_queue,
-           person->angriess,
-           person->current_coords.x,
-           person->current_coords.y,
-           person->destination_coords.x,
-           person->destination_coords.y);
+
+    printf("{ id: %d, pkg_type: %d, chocolate_type: %d, index: %d, q: %p, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",
+           item->id,
+           item->pkg_type,
+           item->chocolate_type,
+           item->index_in_queue,
+           item->current_location,
+           item->current_coords.x,
+           item->current_coords.y,
+           item->destination_coords.x,
+           item->destination_coords.y);
 }
 
 #endif

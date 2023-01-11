@@ -11,7 +11,9 @@ int msg_q_id;
 void paint_and_swap_frame();
 void background();
 int read_message_queue(HashTable *ht);
-void draw_people_in_queues();
+void draw_items_in_queues();
+void update_moving_items_locations();
+void setup_message_queue();
 
 void recursive_timed_update(int time);
 
@@ -49,7 +51,7 @@ void paint_and_swap_frame()
     // draw_palestine_flag();
 
     // Draw the queues
-    draw_queues();
+    draw_locations(locations_ptrs);
 
     draw_teller_text();
 
@@ -62,7 +64,7 @@ void paint_and_swap_frame()
 
     // draw_rolling_gate(0, -100);
 
-    draw_people_in_queues();
+    draw_items_in_queues();
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
@@ -71,39 +73,40 @@ void validate_args(int argc, char *argv[])
 {
 }
 
-void draw_people_in_queues()
+void draw_items_in_queues()
 {
 
     for (int i = 0; i < ht->size; i++)
     {
         if (ht->items[i])
         {
-            draw_person(ht->items[i]->value);
+            draw_item(ht->items[i]->value);
             if (ht->overflow_buckets[i])
             {
                 LinkedList *head = ht->overflow_buckets[i];
                 while (head)
                 {
-                    draw_person(ht->items[i]->value);
+                    draw_item(ht->items[i]->value);
                     head = head->next;
                 }
             }
         }
     }
 }
-void update_people_locations()
+void update_moving_items_locations()
 {
+    return;
     for (int i = 0; i < ht->size; i++)
     {
         if (ht->items[i])
         {
-            update_person_location(ht->items[i]->value);
+            update_item_location(ht->items[i]->value);
             if (ht->overflow_buckets[i])
             {
                 LinkedList *head = ht->overflow_buckets[i];
                 while (head)
                 {
-                    update_person_location(ht->items[i]->value);
+                    update_item_location(ht->items[i]->value);
                     head = head->next;
                 }
             }
@@ -114,77 +117,79 @@ void update_people_locations()
 int read_message_queue(HashTable *ht)
 {
 
-    message_buf message_queue_buffer;
+    return -1;
 
-    // msg_type set to Zero to read the first message in the queue regarless of it its type
-    if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
-    {
-        if (errno == ENOMSG)
-        {
-            return -1;
-        }
+    //     message_buf message_queue_buffer;
 
-        // if the error is not ENOMSG, then it is an error
-        perror("msgrcv");
-        exit(3);
-    }
+    //     // msg_type set to Zero to read the first message in the queue regarless of it its type
+    //     if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
+    //     {
+    //         if (errno == ENOMSG)
+    //         {
+    //             return -1;
+    //         }
 
-    // printf("received message:\n\n");
-    // print_message(&(message_queue_buffer.payload));
+    //         // if the error is not ENOMSG, then it is an error
+    //         perror("msgrcv");
+    //         exit(3);
+    //     }
 
-    if (message_queue_buffer.payload.msg_type == PersonEntered)
-    {
+    //     // printf("received message:\n\n");
+    //     // print_message(&(message_queue_buffer.payload));
 
-        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
-        Person *p = create_person(
-            message_queue_buffer.payload.person_pid,
-            message_queue_buffer.payload.index_in_queue,
-            message_queue_buffer.payload.gender,
-            message_queue_buffer.payload.angriness,
-            current_queue);
+    //     if (message_queue_buffer.payload.msg_type == PersonEntered)
+    //     {
 
-        p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
+    //         LocationObject *current_location = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
+    //         Person *p = create_person(
+    //             message_queue_buffer.payload.person_pid,
+    //             message_queue_buffer.payload.index_in_queue,
+    //             message_queue_buffer.payload.gender,
+    //             message_queue_buffer.payload.angriness,
+    //             current_location);
 
-        ht_insert(ht, p->id, p);
-    }
-    else if (message_queue_buffer.payload.msg_type == PersonExitedUnserved)
-    {
-        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-        p->destination_coords.y = 1000;
-        p->angriess = 1;
-    }
-    else if (message_queue_buffer.payload.msg_type == PersonExitedSatisfied)
-    {
-        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-        p->destination_coords.y = -1000;
-        p->angriess = 0;
-    }
-    else if (message_queue_buffer.payload.msg_type == PersonExitedUnsatisfied)
-    { // TODO color satisfied in green
-        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-        p->destination_coords.y = -1000;
-        p->angriess = 1;
-    }
-    else if (message_queue_buffer.payload.msg_type == PersonUpdated)
-    {
-        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
+    //         p->destination_coords = get_queue_location_coords_for_index(current_location, p->index_in_queue);
 
-        if (p->current_queue != current_queue)
-        {
-            p->current_queue->current_people--;
-            p->current_queue = current_queue;
-            current_queue->current_people++;
-        }
-        p->index_in_queue = message_queue_buffer.payload.index_in_queue;
+    //         ht_insert(ht, p->id, p);
+    //     }
+    //     else if (message_queue_buffer.payload.msg_type == PersonExitedUnserved)
+    //     {
+    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+    //         p->destination_coords.y = 1000;
+    //         p->angriess = 1;
+    //     }
+    //     else if (message_queue_buffer.payload.msg_type == PersonExitedSatisfied)
+    //     {
+    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+    //         p->destination_coords.y = -1000;
+    //         p->angriess = 0;
+    //     }
+    //     else if (message_queue_buffer.payload.msg_type == PersonExitedUnsatisfied)
+    //     { // TODO color satisfied in green
+    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+    //         p->destination_coords.y = -1000;
+    //         p->angriess = 1;
+    //     }
+    //     else if (message_queue_buffer.payload.msg_type == PersonUpdated)
+    //     {
+    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+    //         LocationObject *current_location = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
 
-        p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
+    //         if (p->current_location != current_location)
+    //         {
+    //             p->current_location->current_people--;
+    //             p->current_location = current_location;
+    //             current_location->current_people++;
+    //         }
+    //         p->index_in_queue = message_queue_buffer.payload.index_in_queue;
 
-        p->index_in_queue = message_queue_buffer.payload.index_in_queue;
-        p->angriess = message_queue_buffer.payload.angriness;
-    }
+    //         p->destination_coords = get_queue_location_coords_for_index(current_location, p->index_in_queue);
 
-    return 1;
+    //         p->index_in_queue = message_queue_buffer.payload.index_in_queue;
+    //         p->angriess = message_queue_buffer.payload.angriness;
+    //     }
+
+    //     return 1;
 }
 
 void recursive_timed_update(int time)
@@ -200,7 +205,7 @@ void recursive_timed_update(int time)
         // keep reading messgaes until queue is empty
     }
 
-    update_people_locations();
+    update_moving_items_locations();
 
     male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
     female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
@@ -212,7 +217,7 @@ void setup_ui(int argc, char **argv)
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
 
-    glutInitWindowSize(1400, 700);               // Set the window's initial width & height
+    glutInitWindowSize(900, 450);                // Set the window's initial width & height
     glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
     glutCreateWindow("OIM Simulation");          // Create a window with the given title
     glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
@@ -222,24 +227,24 @@ void setup_ui(int argc, char **argv)
     background(); // Background color
 }
 
-void create_random_people()
-{
+// void create_random_people()
+// {
 
-    for (int i = 1; i < people_count; i++)
-    {
+//     for (int i = 1; i < people_count; i++)
+//     {
 
-        gender g = (rand() % 2) ? Male : Female;
-        Queue *q = (g == Male) ? queue_A1 : queue_A2;
+//         gender g = (rand() % 2) ? Male : Female;
+//         LocationObject *q = (g == Male) ? queue_A1 : queue_A2;
 
-        Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+//         Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
 
-        p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
+//         p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
 
-        ht_insert(ht, p->id, p);
+//         ht_insert(ht, p->id, p);
 
-        q->current_people++;
-    }
-}
+//         q->current_people++;
+//     }
+// }
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char **argv)
@@ -249,51 +254,23 @@ int main(int argc, char **argv)
 
     srand(time(NULL)); // initialize random seed
 
-    // setup_signals(); // does nothing in standalone mode
-
-    // open_pipes();              // does nothing in standalone mode
     validate_args(argc, argv); // does nothing in standalone mode
 
     setup_ui(argc, argv);
 
-    queue_A1 = (Queue *)malloc(sizeof(Queue));
-    queue_A2 = (Queue *)malloc(sizeof(Queue));
+    locations_ptrs[0] = NULL;
+    locations_ptrs[23] = NULL;
 
-    queue_B1 = (Queue *)malloc(sizeof(Queue));
-    queue_B2 = (Queue *)malloc(sizeof(Queue));
+    for (int i = 0; i <= 22; i++)
+    {
+        locations_ptrs[i] = (LocationObject *)malloc(sizeof(LocationObject));
+    }
 
-    metal_detector = (Queue *)malloc(sizeof(Queue));
-    inner_grouping_area = (Queue *)malloc(sizeof(Queue));
-
-    teller_T = (Queue *)malloc(sizeof(Queue));
-    teller_B = (Queue *)malloc(sizeof(Queue));
-    teller_R = (Queue *)malloc(sizeof(Queue));
-    teller_I = (Queue *)malloc(sizeof(Queue));
-
-    teller_T_Q = (Queue *)malloc(sizeof(Queue));
-    teller_B_Q = (Queue *)malloc(sizeof(Queue));
-    teller_R_Q = (Queue *)malloc(sizeof(Queue));
-    teller_I_Q = (Queue *)malloc(sizeof(Queue));
-
-    initialize_queues(
-        queue_A1,
-        queue_A2,
-        queue_B1,
-        queue_B2,
-        metal_detector,
-        inner_grouping_area,
-        teller_T,
-        teller_B,
-        teller_R,
-        teller_I,
-        teller_T_Q,
-        teller_B_Q,
-        teller_R_Q,
-        teller_I_Q);
+    initialize_queues_coordinates(locations_ptrs);
 
     ht = create_table(CAPACITY);
 
-    setup_message_queue();
+    // setup_message_queue();
 
     glutMainLoop(); // Enter the event-processing loop
 

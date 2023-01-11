@@ -5,20 +5,47 @@
 #include "./structs.h"
 #include "./hash_table.h"
 
-Queue *queue_A1,
-    *queue_A2,
-    *queue_B1,
-    *queue_B2,
-    *metal_detector,
-    *inner_grouping_area,
-    *teller_R,
-    *teller_I,
-    *teller_B,
-    *teller_T,
-    *teller_R_Q,
-    *teller_I_Q,
-    *teller_B_Q,
-    *teller_T_Q;
+LocationObject *locations_ptrs[24];
+
+LocationObject
+    // manufacturing lines
+    *manufacturing_line_a1_location_obj,
+    *manufacturing_line_a2_location_obj,
+    *manufacturing_line_a3_location_obj,
+
+    *manufacturing_line_b1_location_obj,
+    *manufacturing_line_b2_location_obj,
+
+    *manufacturing_line_c1_location_obj,
+    *manufacturing_line_c2_location_obj,
+
+    // patching
+    *patching_a_location_obj,
+    *patching_b_location_obj,
+    *patching_c_location_obj,
+
+    // printing
+    *printer_location_obj,
+
+    // containers
+    *container_a_location_obj,
+    *container_b_location_obj,
+    *container_c_location_obj,
+
+    // carton boxes
+    *carton_box_a_location_obj,
+    *carton_box_b_location_obj,
+    *carton_box_c_location_obj,
+
+    // storage
+    *storage_area_a_location_obj,
+    *storage_area_b_location_obj,
+    *storage_area_c_location_obj,
+
+    // trucks
+    *truck_1_location_obj,
+    *truck_2_location_obj,
+    *truck_3_location_obj;
 
 // Person *people[500];
 
