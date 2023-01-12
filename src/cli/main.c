@@ -38,7 +38,7 @@ void main()
     // register signal handler for SIGINT to clean up
     signal(SIGINT, interrupt_sig_handler);
 
-    start_simulation();
+    //start_simulation();
 
     clean_up();
 
@@ -411,4 +411,37 @@ int randomIntegerInRange(int lower, int upper)
 {
     srand(time(NULL)); // randomize seed
     return (rand() % (upper - lower + 1)) + lower;
+}
+
+
+
+//New Mohammad
+
+struct chocolateNode{
+        char chocolateType;
+        char expirationDate[20];
+        
+};
+
+struct printerNode{
+        struct chocolateNode patche[10];
+        struct printerNode * next;       
+};
+
+
+// Pointers to The printer queue
+struct printerNode *FrontPrinterQueue = NULL;
+struct printerNode *RearPrinterQueue  = NULL;
+
+
+/*Noor : use this function with the two threads:
+ "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
+ Hint :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */ 
+void enqueuToPrinterQueue(struct chocolateNode patche[10]){
+
+
+}
+
+void dequeueFromPrinterQueue(){
+
 }
