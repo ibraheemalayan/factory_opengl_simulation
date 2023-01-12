@@ -25,6 +25,7 @@
 
 #define UISIG 7
 #define PERSON 1L
+#define PILESIZE 20
 
 enum MsgType
 {
@@ -121,6 +122,13 @@ struct message_payload
   int ids_to_delete[10]; // can be ids of items, patches, boxes
 };
 
+typedef struct chocolateProduct
+{
+  ChocolateType type;
+  unsigned char progress;
+  unsigned int id;
+} chocolateProduct;
+
 typedef struct message_payload message_payload;
 
 struct message_buf
@@ -128,6 +136,12 @@ struct message_buf
   long mtype; // first field of the message struct should be the message type
   message_payload payload;
 };
+
+typedef struct employee_information
+{
+  int linenum;
+  int index;
+}employee_information;
 
 typedef struct message_buf message_buf;
 

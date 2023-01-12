@@ -1,6 +1,8 @@
 #include "local.h"
 #include "utils.h"
 #include "globals.c"
+#include <bits/pthreadtypes.h>
+#include <pthread.h>
 
 // Arrays of threads
 // Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
@@ -9,119 +11,256 @@ pthread_t g_Array_of_Threads_TypeA[3][8];
 pthread_t g_Array_of_Threads_TypeB[2][6];
 // Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC
 pthread_t g_Array_of_Threads_TypeC[2][5];
+// Generator thread; produces chocolate products to be processed
+pthread_t generator;
 
+// array of pthread mutexes for each line
+pthread_mutex_t A_pile_mutex [3][PILESIZE];
+pthread_mutex_t B_pile_mutex [2][PILESIZE];
+pthread_mutex_t C_pile_mutex [2][PILESIZE];
 // Arrays of mutex //Steps 1 to 6 have to happen in order
-pthread_mutex_t g_mutexs_for_lines_of_typeB[2][6] = {{PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER}, {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER}};
-int g_count_for_mutex_index_typeB_line1 = 0;
-int g_count_for_mutex_index_typeB_line2 = 0;
-
-int g_number_of_threads_per_project = 0;
 
 //.................Functions....................
+void initiate_mutexes();
 void load_user_defined_values();
 void start_simulation();
+void create_generator_thread();
 void create_employees_threads_type_A();
 void create_employees_threads_type_B();
 void create_employees_threads_type_C();
+void join_all();
 int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
-void employeeDoStepPerLine_TypeB(void *line_number_as_index);
+void generator_routine(void *argptr);
+void employee_lineA(void *position);
+void employee_lineB(void *position);
+void employee_lineC(void *position);
 
 void main()
 {
-    load_user_defined_values();
-
+    //load_user_defined_values();
+    
     create_and_setup_message_queues();
+    
+    initiate_mutexes();
 
-    run_gui();
+    //run_gui();
 
     // register signal handler for SIGINT to clean up
     signal(SIGINT, interrupt_sig_handler);
 
     start_simulation();
 
-    clean_up();
+    join_all();
 
-    return 0;
+    clean_up();
+}
+
+void initiate_mutexes(){
+    int i,j;
+    for (i = 0; i < 3; i++){
+        for (j = 0; j < PILESIZE; j++){
+            pthread_mutex_init(&A_pile_mutex[i][j],NULL);
+        }
+    }
+
+    for (i = 0; i < 2; i++){
+        for (j = 0; j < PILESIZE; j++){
+            pthread_mutex_init(&B_pile_mutex[i][j],NULL);
+        }
+    }
+
+    for (i = 0; i < 2; i++){
+        for (j = 0; j < PILESIZE; j++){
+            pthread_mutex_init(&C_pile_mutex[i][j],NULL);
+        }
+    }
 }
 
 void start_simulation()
 {
-    // Minimum number of threads 56 !?
-
-    /*number of threads for employess of producing the chocolate products in the 7 lines : 46 threads
-        TypeA : 3*8 =24
-        TypeB : 2*6 =12
-        TypeC : 2*5 =10
-    */
-    // create_employees_threads_type_A();
+    printf("generating threads\n");
+    create_generator_thread();
+    create_employees_threads_type_A();
     create_employees_threads_type_B();
-    // create_employees_threads_type_C();
-
-    /* number of threads for employess of collect_chocolate_in_patches_of_10_pieces_per_type_and_sent_to_printing_the_expiration_date : 2 */
-    // What about printing_the_expiration_date line 8 should be as thread //!?
-
-    /* number of threads for employess for moving_from_printing_expiration_date_machine_to_containers 3 */
-
-    /* number of threads for employess for fill_the_carton_boxes_from_the_containers 3 */
-
-    /* number of threads for storage employess to_move_the_filled_carton_boxes_and_place_them_in_the_storge_area 2 */
-    // Storage area == Queue //!?
+    create_employees_threads_type_C();
 }
+
+void create_generator_thread(){
+    pthread_create(&generator, NULL, (void *)generator_routine, NULL);
+}
+
 void create_employees_threads_type_A()
 {
-    int i, j, time_for_emp_takes_to_finsh_step_per_line_A;
+    int i = 0, j = 0;
+    employee_information position;
     for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
     {
         for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_A; i++)
         {
-            time_for_emp_takes_to_finsh_step_per_line_A = randomIntegerInRange(C_MIN_A, C_MAX_A);
-            pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employeeDoStepPerLine, (void *)&time_for_emp_takes_to_finsh_step_per_line_A);
-            pthread_join(g_Array_of_Threads_TypeA[j][i], NULL);
-            g_number_of_threads_per_project++;
-            printf("\n%d\n", g_number_of_threads_per_project);
+            position.linenum = j;
+            position.index = i;
+            pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position);
         }
     }
 }
 
 void create_employees_threads_type_B()
 {
-    int i, j;
+    int i = 0, j = 0;
+    employee_information position;
     for (j = 0; j < C_MANUFACTURING_LINES_TYPEB; j++)
     {
         for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_B; i++)
         {
-            pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employeeDoStepPerLine_TypeB, (void *)&j); // j as line index
-            // pthread_join(g_Array_of_Threads_TypeB[j][i], NULL);
-            g_number_of_threads_per_project++;
+            position.linenum = j;
+            position.index = i;
+            pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position);
         }
     }
-    for (j = 0; j < C_MANUFACTURING_LINES_TYPEB; j++)
-        for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_B; i++)
-            pthread_join(g_Array_of_Threads_TypeB[j][i], NULL);
 }
 
 void create_employees_threads_type_C()
 {
-    int i, j, time_for_emp_takes_to_finsh_step_per_line_C;
+    int i = 0, j = 0;
+    employee_information position;
     for (j = 0; j < C_MANUFACTURING_LINES_TYPEC; j++)
     {
         for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_C; i++)
         {
-            time_for_emp_takes_to_finsh_step_per_line_C = randomIntegerInRange(C_MIN_C, C_MAX_C);
-            pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employeeDoStepPerLine, (void *)&time_for_emp_takes_to_finsh_step_per_line_C);
-            pthread_join(g_Array_of_Threads_TypeC[j][i], NULL);
-            g_number_of_threads_per_project++;
-            printf("\n%d\n", g_number_of_threads_per_project);
+            position.linenum = j;
+            position.index = i;
+            pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position);
         }
     }
 }
-void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line)
-{
-    int time = *((int *)time_for_emp_takes_to_finsh_step_per_line);
-    sleep(time);
+void generator_routine(void *argptr){
+    int empty_index, j,i;
+
+    //initialize piles
+    for (i = 0; i < 3; i++){
+        for (j=0; j<PILESIZE; j++){
+            type_A_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+        }
+    }
+    for (i = 0; i < 2; i++){
+        for (j=0; j<PILESIZE; j++){
+            type_B_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+        }
+    }
+    for (i = 0; i < 2; i++){
+        for (j=0; j<PILESIZE; j++){
+            type_C_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+        }
+    }
+
+    for(i = 0; i < 8; i++){ //temporary because of lack of termination condition
+        
+        for (j = 0 ; j < 3; j++){
+            empty_index = array_full(type_A_pile[j]);
+            if (empty_index != PILESIZE)
+                generate_product(empty_index, 'a',j );
+        }
+
+        for (j =0 ; j < 2; j++){
+            empty_index = array_full(type_B_pile[j]);
+            if (empty_index != PILESIZE)
+                generate_product(empty_index, 'b',j);
+        }
+
+        for (j =0 ; j < 2; j++){
+            empty_index = array_full(type_C_pile[j]);
+            if (empty_index != PILESIZE)
+                generate_product(empty_index, 'c',j);
+        }
+        usleep(50000); //to be changed later
+    }
 }
-void employeeDoStepPerLine_TypeB(void *line_number_as_index)
+void employee_lineA(void * position){
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+
+    printf("%d\t%d\n",linenum , index);
+    fflush(stdout);
+    int i = 0;
+    while(1){
+        if(index < 4){
+            // if (pthread_mutex_trylock(A_pile_mutex[i])){
+                // pthread_mutex_unlock(A_pile_mutex[i]);
+            // }
+        }
+        i++;
+        i%=PILESIZE;
+        // printf("%d\n",i);
+        if ( i == PILESIZE-1)
+            break;
+    }
+    pthread_exit(0);
+}
+
+void employee_lineB(void * position){
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+
+    printf("%d\t%d\n",linenum , index);
+    fflush(stdout);
+
+    /*switch(index){
+    }*/
+    pthread_exit(0);
+
+}
+
+void employee_lineC(void * position){
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+
+    printf("%d\t%d\n",linenum , index);
+    fflush(stdout);
+
+    /*switch(index){
+    }*/
+    pthread_exit(0);
+
+}
+
+void join_all(){
+    int i,j;
+    for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
+    {
+        for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_A; i++)
+        {
+            pthread_join(g_Array_of_Threads_TypeA[j][i], NULL);
+        }
+    }
+
+    for (j = 0; j < C_MANUFACTURING_LINES_TYPEB; j++)
+    {
+        for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_B; i++)
+        {
+            pthread_join(g_Array_of_Threads_TypeB[j][i], NULL);
+        }
+    }
+
+    for (j = 0; j < C_MANUFACTURING_LINES_TYPEC; j++)
+    {
+        for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_C; i++)
+        {
+            pthread_join(g_Array_of_Threads_TypeC[j][i], NULL);
+        }
+    }
+
+    pthread_join(generator,NULL);
+}
+
+
+
+
+
+/*void employeeDoStepPerLine_TypeB(void *line_number_as_index)
 { // pass line identifaier
 
     // test on typeB lines : 2 lines and Steps 1 to 6 have to happen in order
@@ -260,7 +399,7 @@ void employeeDoStepPerLine_TypeB(void *line_number_as_index)
 
         time = randomIntegerInRange(C_MIN_B, C_MAX_B);
     }
-}
+}*/
 
 void load_user_defined_values()
 {
@@ -270,8 +409,10 @@ void load_user_defined_values()
     ssize_t read;
 
     fp = fopen("cli/inputfile.txt", "r");
-    if (fp == NULL)
+    if (fp == NULL){
+        perror("load_user_defined_values:");
         exit(EXIT_FAILURE);
+    }
     int lineNumber = 0;
     while ((read = getline(&line, &len, fp)) != -1)
     {
@@ -407,8 +548,3 @@ void load_user_defined_values()
     fclose(fp);
 }
 
-int randomIntegerInRange(int lower, int upper)
-{
-    srand(time(NULL)); // randomize seed
-    return (rand() % (upper - lower + 1)) + lower;
-}

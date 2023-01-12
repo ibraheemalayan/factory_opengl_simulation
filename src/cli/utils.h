@@ -2,6 +2,7 @@
 #define __UTILS_H_
 
 #include "../include.h"
+#include "globals.c"
 
 pid_t gui_pid = 0;
 int ui_msgq_id;
@@ -101,6 +102,51 @@ void interrupt_sig_handler(int sig)
     clean_up();
     reset_stdout();
     exit(0);
+}
+
+int randomIntegerInRange(int lower, int upper)
+{
+    srand(time(NULL)); // randomize seed
+    return (rand() % (upper - lower + 1)) + lower;
+}
+// returns empty index if found, else returns PILESIZE
+int array_full(chocolateProduct *arr[]){
+    for(int i = 0; i < PILESIZE; i++){
+        if (arr[i] == NULL)
+            return i;
+    }
+    return PILESIZE;
+}
+
+
+void generate_product(int empty_index, char type, int linenum){
+    srand(time(NULL));
+    chocolateProduct *temp;
+    temp = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+
+    switch(type){
+        case 'a' : 
+            temp->type =TYPE_A;
+            break;
+        case 'b' : 
+            temp->type =TYPE_B;
+            break;
+        case 'c' : 
+            temp->type =TYPE_C;
+            break;
+    }
+
+    id_counter+=(rand()%100);
+    temp->id = id_counter;
+    temp->progress = 0;
+    printf("progress : %X\tID : %d\ttype : %d\n", temp->progress, id_counter, temp->type);
+
+
+    if (type == 'a'){
+        // type_A_pile[linenum][empty_index]->type = temp->type;
+        // type_A_pile[linenum][empty_index]->id = temp->id;
+        // type_A_pile[linenum][empty_index]->progress = temp->progress;
+    }
 }
 
 #endif

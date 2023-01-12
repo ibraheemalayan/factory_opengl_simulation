@@ -21,5 +21,13 @@ int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC = 0
 
 int g_time_to_end_simulation_in_minutes = 0;
 
+unsigned int id_counter = 100001;
+
+chocolateProduct *type_A_pile [3][PILESIZE] = { NULL };
+
+chocolateProduct *type_B_pile [2][PILESIZE] = { NULL };
+
+chocolateProduct *type_C_pile [2][PILESIZE] = { NULL };
+
 #define __CLI_GLOBALS_H_
 #endif
