@@ -517,7 +517,7 @@ void testPrintingQueue(){
         enqueuToPrinterQueue(ch1);
         struct chocolateInformation ch2;
         ch2.chocolateType='B';
-        enqueuToPrinterQueue(ch1);
+        enqueuToPrinterQueue(ch2);
         displyPrintingQueue();
 
 }
