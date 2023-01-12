@@ -41,6 +41,7 @@ void main()
     //start_simulation();
     testPrintingQueue();
 
+
     clean_up();
 
     return 0;
@@ -419,24 +420,30 @@ int randomIntegerInRange(int lower, int upper)
 //New Mohammad
 
 //.........................FUNCTIONS..............
-struct chocolateNode * dequeueFromPrinterQueue();
-void enqueuToPrinterQueue(struct chocolateNode *patche );
+struct chocolateInformation  dequeueFromPrinterQueue();
+void enqueuToPrinterQueue(struct chocolateInformation );
+void displyPrintingQueue();
+void testPrintingQueue();
 
-struct chocolateNode{
+struct chocolateInformation{
         char chocolateType;
         char expirationDate[20];
-        
-};
 
-struct printerNode{
-        struct chocolateNode patche[10];
-        struct printerNode * next;       
+};
+struct chocolateNode{
+        struct chocolateInformation chocolateInfo;
+        struct chocolateNode * next;
+        
 };
 
 
 // Pointers to The printer queue
-struct printerNode *FrontPrinterQueue = NULL;
-struct printerNode *RearPrinterQueue  = NULL;
+struct chocolateNode *FrontPrinterQueue = NULL;
+struct chocolateNode *RearPrinterQueue  = NULL;
+
+// Pointers to The containerTypeA queue
+struct chocolateNode *FrontContainerTypeAQueue = NULL;
+struct chocolateNode *RearContainerTypeAQueue  = NULL;
 
 //Mutex on printing Queue
 pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -445,13 +452,14 @@ pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
 /*Noor : use this function with the two threads:
  "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
  Hint 1 :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */ 
-/*Noor:
-Hint 2: dequeueFromPrinterQueue and enqueuToPrinterQueue need to test and update , Iam not sure about basing array of struct
-*/
-void enqueuToPrinterQueue(struct chocolateNode *patche){
+ /*Noor
+ Hint 2 :enqueuToPrinterQueue & dequeueFromPrinterQueue became deal with just one Item of chocolate
+ */
+ 
+
+void enqueuToPrinterQueue(struct chocolateInformation chocolateInfo){
         pthread_mutex_lock(&printingQueue_mutex);
-      //struct personInformation person = personInf;
-        struct printerNode *ptr = (struct printerNode *)malloc(sizeof(struct printerNode));
+        struct chocolateNode *ptr = (struct chocolateNode *)malloc(sizeof(struct chocolateNode));
         if (ptr == NULL)
         {
                 printf("\nOVERFLOW\n");
@@ -461,9 +469,7 @@ void enqueuToPrinterQueue(struct chocolateNode *patche){
         {
                 //ToDo Update index for ui 
                 
-                for (int i = 0; i < 10; i++){
-                        ptr->patche[i]=patche[i];
-                }
+                ptr->chocolateInfo=chocolateInfo;
                 if (FrontPrinterQueue == NULL)
                 {
                         FrontPrinterQueue = ptr;
@@ -483,24 +489,57 @@ void enqueuToPrinterQueue(struct chocolateNode *patche){
 }
 
 
-struct chocolateNode * dequeueFromPrinterQueue(){
+struct chocolateInformation dequeueFromPrinterQueue(){
         
         pthread_mutex_lock(&printingQueue_mutex);
-        struct printerNode *temp = NULL;
-        struct chocolateNode *patche = NULL;
+        struct chocolateNode *chocolate= NULL;
+        struct chocolateInformation chocolateInfo = {0};
         if (FrontPrinterQueue == NULL)
         {
                 printf("Underflow\n");
-                return patche;
+                return chocolateInfo;
         }
         else
         {
-                temp = FrontPrinterQueue;
-                patche = temp->patche;
+                chocolate = FrontPrinterQueue;
+                chocolateInfo = chocolate->chocolateInfo;
                 FrontPrinterQueue = FrontPrinterQueue->next;
-                free(temp);
+                free(chocolate);
                 
         }
         pthread_mutex_unlock(&printingQueue_mutex);
-        return patche; 
+        return chocolateInfo; 
 }
+
+void testPrintingQueue(){
+        struct chocolateInformation ch1;
+        ch1.chocolateType='A';
+        enqueuToPrinterQueue(ch1);
+        struct chocolateInformation ch2;
+        ch2.chocolateType='B';
+        enqueuToPrinterQueue(ch1);
+        displyPrintingQueue();
+
+}
+
+void displyPrintingQueue()
+{
+
+    struct chocolateNode *temp = NULL;
+    if ((FrontPrinterQueue == NULL) && (RearPrinterQueue == NULL))
+    {
+        printf("\n\nPrinting Queue is Empty\n");
+    }
+    else
+    {
+        printf("\n\nThe Printing Queue is :\n\n");
+        temp = FrontPrinterQueue;
+        while (temp)
+        {
+            printf("\n\n%c\n\n", temp->chocolateInfo.chocolateType);
+            temp = temp->next;
+        }
+    }
+}
+
+
