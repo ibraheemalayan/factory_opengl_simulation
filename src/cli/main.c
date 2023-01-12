@@ -39,6 +39,7 @@ void main()
     signal(SIGINT, interrupt_sig_handler);
 
     //start_simulation();
+    testPrintingQueue();
 
     clean_up();
 
@@ -417,6 +418,10 @@ int randomIntegerInRange(int lower, int upper)
 
 //New Mohammad
 
+//.........................FUNCTIONS..............
+struct chocolateNode * dequeueFromPrinterQueue();
+void enqueuToPrinterQueue(struct chocolateNode *patche );
+
 struct chocolateNode{
         char chocolateType;
         char expirationDate[20];
@@ -433,15 +438,69 @@ struct printerNode{
 struct printerNode *FrontPrinterQueue = NULL;
 struct printerNode *RearPrinterQueue  = NULL;
 
+//Mutex on printing Queue
+pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*Noor : use this function with the two threads:
  "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
- Hint :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */ 
-void enqueuToPrinterQueue(struct chocolateNode patche[10]){
-
-
+ Hint 1 :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */ 
+/*Noor:
+Hint 2: dequeueFromPrinterQueue and enqueuToPrinterQueue need to test and update , Iam not sure about basing array of struct
+*/
+void enqueuToPrinterQueue(struct chocolateNode *patche){
+        pthread_mutex_lock(&printingQueue_mutex);
+      //struct personInformation person = personInf;
+        struct printerNode *ptr = (struct printerNode *)malloc(sizeof(struct printerNode));
+        if (ptr == NULL)
+        {
+                printf("\nOVERFLOW\n");
+                return;
+        }
+        else
+        {
+                //ToDo Update index for ui 
+                
+                for (int i = 0; i < 10; i++){
+                        ptr->patche[i]=patche[i];
+                }
+                if (FrontPrinterQueue == NULL)
+                {
+                        FrontPrinterQueue = ptr;
+                        RearPrinterQueue = ptr;
+                        FrontPrinterQueue->next = NULL;
+                        RearPrinterQueue->next= NULL;
+                }
+                else
+                {
+                        RearPrinterQueue->next = ptr;
+                        RearPrinterQueue = ptr;
+                        RearPrinterQueue->next = NULL;
+                }
+        //usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
+        }
+        pthread_mutex_unlock(&printingQueue_mutex); 
 }
 
-void dequeueFromPrinterQueue(){
 
+struct chocolateNode * dequeueFromPrinterQueue(){
+        
+        pthread_mutex_lock(&printingQueue_mutex);
+        struct printerNode *temp = NULL;
+        struct chocolateNode *patche = NULL;
+        if (FrontPrinterQueue == NULL)
+        {
+                printf("Underflow\n");
+                return patche;
+        }
+        else
+        {
+                temp = FrontPrinterQueue;
+                patche = temp->patche;
+                FrontPrinterQueue = FrontPrinterQueue->next;
+                free(temp);
+                
+        }
+        pthread_mutex_unlock(&printingQueue_mutex);
+        return patche; 
 }
