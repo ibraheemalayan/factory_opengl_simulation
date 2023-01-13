@@ -3,6 +3,7 @@
 #include "globals.c"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
+#include <sys/msg.h>
 
 // Arrays of threads
 // Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
@@ -79,7 +80,7 @@ void initiate_mutexes(){
 
 void start_simulation()
 {
-    printf("generating threads\n");
+    // printf("generating threads\n");
     create_generator_thread();
     create_employees_threads_type_A();
     create_employees_threads_type_B();
@@ -100,7 +101,9 @@ void create_employees_threads_type_A()
         {
             position.linenum = j;
             position.index = i;
+            // printf("postion : (%d,%d)\n", position.linenum, position.index);
             pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position);
+            usleep(5);
         }
     }
 }
@@ -115,7 +118,9 @@ void create_employees_threads_type_B()
         {
             position.linenum = j;
             position.index = i;
+            // printf("postion : (%d,%d)\n", position.linenum, position.index);
             pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position);
+            usleep(5);
         }
     }
 }
@@ -130,7 +135,9 @@ void create_employees_threads_type_C()
         {
             position.linenum = j;
             position.index = i;
+            // printf("postion : (%d,%d)\n", position.linenum, position.index);
             pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position);
+            usleep(5);
         }
     }
 }
@@ -138,37 +145,39 @@ void generator_routine(void *argptr){
     int empty_index, j,i;
 
     //initialize piles
-    for (i = 0; i < 3; i++){
+    for (i = 0; i < C_MANUFACTURING_LINES_TYPEA; i++){
         for (j=0; j<PILESIZE; j++){
             type_A_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+            type_A_pile[i][j] = NULL;
         }
     }
-    for (i = 0; i < 2; i++){
+    for (i = 0; i < C_MANUFACTURING_LINES_TYPEB; i++){
         for (j=0; j<PILESIZE; j++){
             type_B_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+            type_B_pile[i][j] = NULL;
         }
     }
-    for (i = 0; i < 2; i++){
+    for (i = 0; i < C_MANUFACTURING_LINES_TYPEC; i++){
         for (j=0; j<PILESIZE; j++){
             type_C_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+            type_C_pile[i][j] = NULL;
         }
     }
 
-    for(i = 0; i < 8; i++){ //temporary because of lack of termination condition
-        
-        for (j = 0 ; j < 3; j++){
+    for(i = 0; i < PILESIZE; i++){ //temporary because of lack of termination condition
+        for (j = 0 ; j < C_MANUFACTURING_LINES_TYPEA; j++){
             empty_index = array_full(type_A_pile[j]);
             if (empty_index != PILESIZE)
                 generate_product(empty_index, 'a',j );
         }
 
-        for (j =0 ; j < 2; j++){
+        for (j =0 ; j < C_MANUFACTURING_LINES_TYPEB; j++){
             empty_index = array_full(type_B_pile[j]);
             if (empty_index != PILESIZE)
                 generate_product(empty_index, 'b',j);
         }
 
-        for (j =0 ; j < 2; j++){
+        for (j =0 ; j < C_MANUFACTURING_LINES_TYPEC; j++){
             empty_index = array_full(type_C_pile[j]);
             if (empty_index != PILESIZE)
                 generate_product(empty_index, 'c',j);
@@ -176,54 +185,249 @@ void generator_routine(void *argptr){
         usleep(50000); //to be changed later
     }
 }
-void employee_lineA(void * position){
-    employee_information *temp  = (employee_information *) position;
-    int linenum = temp->linenum;
-    int index = temp->index;
 
-    printf("%d\t%d\n",linenum , index);
-    fflush(stdout);
-    int i = 0;
-    while(1){
-        if(index < 4){
-            // if (pthread_mutex_trylock(A_pile_mutex[i])){
-                // pthread_mutex_unlock(A_pile_mutex[i]);
-            // }
-        }
-        i++;
-        i%=PILESIZE;
-        // printf("%d\n",i);
-        if ( i == PILESIZE-1)
-            break;
-    }
-    pthread_exit(0);
+void employee_lineA(void * position){
+    // employee_information *temp  = (employee_information *) position;
+    // int linenum = temp->linenum;
+    // int index = temp->index;
+    // message_buf buf;
+    // buf.mtype=1;
+    // buf.payload.chocolate_type=TYPE_A;
+    // buf.payload.msg_type = 1;
+    // buf.payload.item_type = PRODUCT;
+    // switch (linenum){
+    //     case 0 :
+    //         buf.payload.current_location = MANUFACTURING_LINE_A1;
+    //         break;
+    //     case 1 :
+    //         buf.payload.current_location = MANUFACTURING_LINE_A2;
+    //         break;
+    //     case 2 :
+    //         buf.payload.current_location = MANUFACTURING_LINE_A3;
+    //         break;
+    // }
+    // buf.payload.index = index;
+
+    // int i = 0, j = 0;
+    // srand(g_Array_of_Threads_TypeA[linenum][index]);
+    // int step_time = (C_MIN_A + rand()) % C_MAX_A;
+    // while(1){
+    //     i = find_product(type_A_pile[linenum], i);
+    //     if (i != PILESIZE)
+    //     {
+    //         if(index < 4)
+    //         {
+            
+    //             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i])){
+    //                 buf.payload.id = type_A_pile[linenum][i]->id;
+
+    //                 if  (index != 0){
+
+    //                     if ((type_A_pile[linenum][i]->progress & (1<<(index-1))) ==  1<<(index-1)){
+
+    //                         buf.payload.id = type_A_pile[linenum][i]->id;
+    //                         if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                             perror("Line A UI Message Queue");
+    //                         type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress;
+    //                         usleep(step_time);
+    //                     }
+
+    //                 }else{
+
+    //                     if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                          perror("Line A UI Message Queue");
+    //                     type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress;
+    //                     usleep(step_time);
+
+    //                 }
+    //                 printf("A : %X\n", type_A_pile[linenum][i]->progress);
+    //                 if (type_A_pile[linenum][i]->progress == 0xff){
+    //                     printf("ready\n");
+    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                         perror("Line A Message Queue");
+    //                     type_A_pile[linenum][i] = NULL;
+    //                 }
+    //                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+
+    //             }
+    //         } 
+    //         else
+    //         {
+
+    //             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i])){
+
+    //                 buf.payload.id = type_A_pile[linenum][i]->id;
+    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                     perror("Line A UI Message Queue");
+    //                 type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress | (1<<index);
+    //                 usleep(step_time);
+    //                 printf("A : %X\n", type_A_pile[linenum][i]->progress);
+    //                 if (type_A_pile[linenum][i]->progress == 0xff){
+    //                     printf("ready\n");
+    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                         perror("Line A Patcher Message Queue");
+    //                     type_A_pile[linenum][i] = NULL;
+    //                 }
+    //                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+
+    //             }
+
+    //         }
+    // }
+    // i = (i+1)%PILESIZE;
+    // j++;
+    // if (j == 10000)
+    //     break;
+    // }
+    // pthread_exit(0);
 }
 
 void employee_lineB(void * position){
     employee_information *temp  = (employee_information *) position;
     int linenum = temp->linenum;
     int index = temp->index;
+    //printf("%d\n",index);
+    message_buf buf;
+    buf.mtype=1;
+    buf.payload.chocolate_type=TYPE_B;
+    buf.payload.msg_type = 1;
+    buf.payload.item_type = PRODUCT;
+    switch (linenum){
+        case 0 :
+            buf.payload.current_location = MANUFACTURING_LINE_B1;
+            break;
+        case 1 :
+            buf.payload.current_location = MANUFACTURING_LINE_B2;
+            break;
+    }
+    buf.payload.index = index;
 
-    printf("%d\t%d\n",linenum , index);
-    fflush(stdout);
+    int i = 0, j = 0;
+    srand(g_Array_of_Threads_TypeB[linenum][index]);
+    int step_time = (C_MIN_B + rand()) % C_MAX_B;
+    // printf("%d", index);
+    while(1){
+        i = find_product(type_B_pile[linenum], i);
+        if (i != PILESIZE)
+        {
+            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i])){
 
-    /*switch(index){
-    }*/
+                buf.payload.id = type_B_pile[linenum][i]->id;
+                if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                    perror("Line B UI Message Queue");
+                type_B_pile[linenum][i]->progress = type_B_pile[linenum][i]->progress | (1 << index);
+                usleep(step_time);
+                //printf("B : %b \n", 0 | (1 << index));
+                if (type_B_pile[linenum][i]->progress == 0x3f){
+                    printf("ready\n");
+                    if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+                         perror("Line B Patcher Message Queue");
+                    type_B_pile[linenum][i] = NULL;
+                }
+                pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
+
+            }
+    }
+    i = (i+1)%PILESIZE;
+    j++;
+    if (j == 10)
+        break;
+    }
     pthread_exit(0);
 
 }
 
 void employee_lineC(void * position){
-    employee_information *temp  = (employee_information *) position;
-    int linenum = temp->linenum;
-    int index = temp->index;
+    // employee_information *temp  = (employee_information *) position;
+    // int linenum = temp->linenum;
+    // int index = temp->index;
+    // message_buf buf;
+    // buf.mtype=1;
+    // buf.payload.chocolate_type=TYPE_C;
+    // buf.payload.msg_type = 1;
+    // buf.payload.item_type = PRODUCT;
+    // switch (linenum){
+    //     case 0 :
+    //         buf.payload.current_location = MANUFACTURING_LINE_C1;
+    //         break;
+    //     case 1 :
+    //         buf.payload.current_location = MANUFACTURING_LINE_C2;
+    //         break;
+    // }
+    // buf.payload.index = index;
 
-    printf("%d\t%d\n",linenum , index);
-    fflush(stdout);
+    // int i = 0, j = 0;
+    // srand(g_Array_of_Threads_TypeC[linenum][index]);
+    // int step_time = (C_MIN_C + rand()) % C_MAX_C;
+    // while(1){
+    //     i = find_product(type_C_pile[linenum], i);
+    //     if (i != PILESIZE)
+    //     {
+    //         if(index < 4)
+    //         {
+            
+    //             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i])){
+    //                 buf.payload.id = type_C_pile[linenum][i]->id;
+    //                 if  (index != 0){
 
-    /*switch(index){
-    }*/
-    pthread_exit(0);
+    //                     if ((type_C_pile[linenum][i]->progress & (1<<(index-1))) == 1<<(index-1)){
+
+    //                         if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                             perror("Line C UI Message Queue");
+    //                         type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+    //                         usleep(step_time);
+    //                     }
+
+    //                 }else{
+
+    //                     if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                          perror("Line C UI Message Queue");
+    //                     type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+    //                     usleep(step_time);
+
+    //                 }
+    //                 printf("C : %X\n", type_C_pile[linenum][i]->progress);
+    //                 if (type_C_pile[linenum][i]->progress == 0x1f){
+    //                     printf("ready\n");
+    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                         perror("Line C patcher Message Queue");
+    //                     type_C_pile[linenum][i] = NULL;
+    //                 }
+    //                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+
+    //             }
+    //         } 
+    //         else
+    //         {
+
+    //             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i])){
+
+    //                 buf.payload.id = type_C_pile[linenum][i]->id;
+    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                     perror("Line C UI Message Queue");
+    //                 type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+    //                 usleep(step_time);
+
+    //                 printf("C : %X\n", type_C_pile[linenum][i]->progress);
+    //                 if (type_C_pile[linenum][i]->progress == 0x1f){
+    //                     printf("ready\n");
+    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+    //                          perror("Line C Patcher Message Queue");
+    //                     type_C_pile[linenum][i] = NULL;
+    //                 }
+
+    //                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+
+    //             }
+
+    //         }
+    // }
+    // i = (i+1)%PILESIZE;
+    // j++;
+    // if (j == 10000)
+    //     break;
+    // }
+    // pthread_exit(0);
 
 }
 

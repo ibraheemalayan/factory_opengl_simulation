@@ -1,3 +1,4 @@
+#include "local.h"
 #ifndef __CLI_GLOBALS_H_
 //..................user-defined-Read from input file.................
 float g_time_for_taking_a_particular_box_to_the_storage_area_as_absent_for_the_storage_employee = 0;
@@ -23,11 +24,15 @@ int g_time_to_end_simulation_in_minutes = 0;
 
 unsigned int id_counter = 100001;
 
-chocolateProduct *type_A_pile [3][PILESIZE] = { NULL };
+chocolateProduct *type_A_pile [C_MANUFACTURING_LINES_TYPEA][PILESIZE];
 
-chocolateProduct *type_B_pile [2][PILESIZE] = { NULL };
 
-chocolateProduct *type_C_pile [2][PILESIZE] = { NULL };
+chocolateProduct *type_B_pile [C_MANUFACTURING_LINES_TYPEB][PILESIZE];
+
+
+chocolateProduct *type_C_pile [C_MANUFACTURING_LINES_TYPEC][PILESIZE];
+
+
 
 #define __CLI_GLOBALS_H_
 #endif
