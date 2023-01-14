@@ -3,6 +3,7 @@
 #include "globals.c"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
+#include <sys/ipc.h>
 #include <sys/msg.h>
 
 // Arrays of threads
@@ -14,12 +15,20 @@ pthread_t g_Array_of_Threads_TypeB[2][6];
 pthread_t g_Array_of_Threads_TypeC[2][5];
 // Generator thread; produces chocolate products to be processed
 pthread_t generator;
+// patcher employees
+pthread_t patcher_employees[2];
+// printer thread
+pthread_t printer;
 
 // array of pthread mutexes for each line
 pthread_mutex_t A_pile_mutex [3][PILESIZE];
 pthread_mutex_t B_pile_mutex [2][PILESIZE];
 pthread_mutex_t C_pile_mutex [2][PILESIZE];
+pthread_mutex_t patch_mutex_A;
+pthread_mutex_t patch_mutex_B;
+pthread_mutex_t patch_mutex_C;
 // Arrays of mutex //Steps 1 to 6 have to happen in order
+
 
 //.................Functions....................
 void initiate_mutexes();
@@ -29,6 +38,8 @@ void create_generator_thread();
 void create_employees_threads_type_A();
 void create_employees_threads_type_B();
 void create_employees_threads_type_C();
+void create_patcher_employees();
+void create_printer_machine();
 void join_all();
 int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
@@ -36,8 +47,11 @@ void generator_routine(void *argptr);
 void employee_lineA(void *position);
 void employee_lineB(void *position);
 void employee_lineC(void *position);
+void patcher_routine(void *argptr);
+void printer_routine(void *argptr);
 
-void main()
+
+int main()
 {
     //load_user_defined_values();
     
@@ -54,7 +68,7 @@ void main()
 
     join_all();
 
-    clean_up();
+    // clean_up();
 }
 
 void initiate_mutexes(){
@@ -76,19 +90,29 @@ void initiate_mutexes(){
             pthread_mutex_init(&C_pile_mutex[i][j],NULL);
         }
     }
+
+    pthread_mutex_init(&patch_mutex_A, NULL);
+
+    pthread_mutex_init(&patch_mutex_B, NULL);
+
+    pthread_mutex_init(&patch_mutex_C, NULL);
 }
 
 void start_simulation()
 {
-    // printf("generating threads\n");
     create_generator_thread();
     create_employees_threads_type_A();
     create_employees_threads_type_B();
     create_employees_threads_type_C();
+    create_patcher_employees();
+    create_printer_machine();
 }
 
 void create_generator_thread(){
-    pthread_create(&generator, NULL, (void *)generator_routine, NULL);
+    if (pthread_create(&generator, NULL, (void *)generator_routine, NULL) == -1){
+        perror("generator thread creation: ");
+        exit(1);
+    }
 }
 
 void create_employees_threads_type_A()
@@ -101,9 +125,11 @@ void create_employees_threads_type_A()
         {
             position.linenum = j;
             position.index = i;
-            // printf("postion : (%d,%d)\n", position.linenum, position.index);
-            pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position);
-            usleep(5);
+            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position) == -1){
+                perror("Employee A, thread creation : ");
+                exit(1);
+            }
+            usleep(30);
         }
     }
 }
@@ -118,9 +144,11 @@ void create_employees_threads_type_B()
         {
             position.linenum = j;
             position.index = i;
-            // printf("postion : (%d,%d)\n", position.linenum, position.index);
-            pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position);
-            usleep(5);
+            if (pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position) == -1){
+                perror("Employee B, thread creation : ");
+                exit(1);
+            }
+            usleep(30);
         }
     }
 }
@@ -135,12 +163,33 @@ void create_employees_threads_type_C()
         {
             position.linenum = j;
             position.index = i;
-            // printf("postion : (%d,%d)\n", position.linenum, position.index);
-            pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position);
-            usleep(5);
+            if (pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position) == -1){
+                perror("Employee C, thread creation : ");
+                exit(1);
+            }
+            usleep(30);
         }
     }
 }
+
+void create_patcher_employees(){
+
+    for (int i =0; i<2; i ++){
+        if (pthread_create(&patcher_employees[i], NULL, (void *)patcher_routine, NULL) == -1){
+            perror("Patcher Employee , thread creation : ");
+            exit(1);
+        }
+    }
+}
+
+void create_printer_machine(){
+    if (pthread_create(&printer, NULL, (void *)printer_routine, NULL) == -1){
+            perror("Patcher Employee , thread creation : ");
+            exit(1);
+        }
+}
+
+
 void generator_routine(void *argptr){
     int empty_index, j,i;
 
@@ -148,19 +197,19 @@ void generator_routine(void *argptr){
     for (i = 0; i < C_MANUFACTURING_LINES_TYPEA; i++){
         for (j=0; j<PILESIZE; j++){
             type_A_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
-            type_A_pile[i][j] = NULL;
+            type_A_pile[i][j] -> id = 0;
         }
     }
     for (i = 0; i < C_MANUFACTURING_LINES_TYPEB; i++){
         for (j=0; j<PILESIZE; j++){
             type_B_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
-            type_B_pile[i][j] = NULL;
+            type_B_pile[i][j] -> id = 0;
         }
     }
     for (i = 0; i < C_MANUFACTURING_LINES_TYPEC; i++){
         for (j=0; j<PILESIZE; j++){
             type_C_pile[i][j] = (chocolateProduct *)malloc(sizeof(chocolateProduct));
-            type_C_pile[i][j] = NULL;
+            type_C_pile[i][j] -> id = 0;
         }
     }
 
@@ -187,111 +236,111 @@ void generator_routine(void *argptr){
 }
 
 void employee_lineA(void * position){
-    // employee_information *temp  = (employee_information *) position;
-    // int linenum = temp->linenum;
-    // int index = temp->index;
-    // message_buf buf;
-    // buf.mtype=1;
-    // buf.payload.chocolate_type=TYPE_A;
-    // buf.payload.msg_type = 1;
-    // buf.payload.item_type = PRODUCT;
-    // switch (linenum){
-    //     case 0 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A1;
-    //         break;
-    //     case 1 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A2;
-    //         break;
-    //     case 2 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A3;
-    //         break;
-    // }
-    // buf.payload.index = index;
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+    message_buf buf;
+    buf.mtype=1;
+    buf.payload.chocolate_type=TYPE_A;
+    buf.payload.msg_type = 1;
+    buf.payload.item_type = PRODUCT;
+    
+    switch (linenum){
+        case 0 :
+            buf.payload.current_location = MANUFACTURING_LINE_A1;
+            break;
+        case 1 :
+            buf.payload.current_location = MANUFACTURING_LINE_A2;
+            break;
+        case 2 :
+            buf.payload.current_location = MANUFACTURING_LINE_A3;
+            break;
+    }
+    buf.payload.index = index;
 
-    // int i = 0, j = 0;
-    // srand(g_Array_of_Threads_TypeA[linenum][index]);
-    // int step_time = (C_MIN_A + rand()) % C_MAX_A;
-    // while(1){
-    //     i = find_product(type_A_pile[linenum], i);
-    //     if (i != PILESIZE)
-    //     {
-    //         if(index < 4)
-    //         {
+    int i = 0, j = 0;
+    srand(g_Array_of_Threads_TypeA[linenum][index]);
+    int step_time = (C_MIN_A + rand()) % C_MAX_A;
+    while(1){
+        i =find_product(type_A_pile[linenum], i);
+        if (i != PILESIZE)
+        {
+            if(index < 4)   // if index is 0-3 
+            {
             
-    //             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i])){
-    //                 buf.payload.id = type_A_pile[linenum][i]->id;
+                if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){ //trys to lock mutex
+                    buf.payload.id = type_A_pile[linenum][i]->id;   // if mutex lock is a successm then load buf id to send to ui
 
-    //                 if  (index != 0){
+                    if  (index != 0){   //if step 1-3
 
-    //                     if ((type_A_pile[linenum][i]->progress & (1<<(index-1))) ==  1<<(index-1)){
+                        if ((type_A_pile[linenum][i]->progress & (1<<(index-1))) ==  1<<(index-1)){ // check to see if previous step is done
 
-    //                         buf.payload.id = type_A_pile[linenum][i]->id;
-    //                         if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                             perror("Line A UI Message Queue");
-    //                         type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress;
-    //                         usleep(step_time);
-    //                     }
+                            if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                                perror("Line A UI Message Queue");
+                            type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress | 1 << index; // do step
+                            usleep(step_time);
+                        }
 
-    //                 }else{
+                    }else{
+                        // do step without checking
+                        if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                             perror("Line A UI Message Queue");
+                        type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress | 1 << index;
+                        usleep(step_time);
 
-    //                     if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                          perror("Line A UI Message Queue");
-    //                     type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress;
-    //                     usleep(step_time);
+                    }
+                    if (type_A_pile[linenum][i]->progress == 0xff){ //if all steps are done send item, and remove from pile
+                        if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+                            perror("Line A Message Queue");
+                        type_A_pile[linenum][i]->id = 0;
+                        type_A_pile[linenum][i]->progress = 0;
+                        type_A_pile[linenum][i]->type = TYPE_A;
+                    }
+                    pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
 
-    //                 }
-    //                 printf("A : %X\n", type_A_pile[linenum][i]->progress);
-    //                 if (type_A_pile[linenum][i]->progress == 0xff){
-    //                     printf("ready\n");
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                         perror("Line A Message Queue");
-    //                     type_A_pile[linenum][i] = NULL;
-    //                 }
-    //                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+                }
+            } 
+            else
+            {
+                //all previous steps but without checking
+                if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){
 
-    //             }
-    //         } 
-    //         else
-    //         {
+                    buf.payload.id = type_A_pile[linenum][i]->id;
+                    if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                         perror("Line A UI Message Queue");
+                     type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress | (1<<index);
+                    usleep(step_time);
+                    if (type_A_pile[linenum][i]->progress == 0xff){
+                        if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+                            perror("Line A Patcher Message Queue");
+                        type_A_pile[linenum][i]->id = 0;
+                        type_A_pile[linenum][i]->progress = 0;
+                        type_A_pile[linenum][i]->type = TYPE_A;
+                    }
+                    pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
 
-    //             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i])){
+                }
 
-    //                 buf.payload.id = type_A_pile[linenum][i]->id;
-    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                     perror("Line A UI Message Queue");
-    //                 type_A_pile[linenum][i]->progress = type_A_pile[linenum][i]->progress | (1<<index);
-    //                 usleep(step_time);
-    //                 printf("A : %X\n", type_A_pile[linenum][i]->progress);
-    //                 if (type_A_pile[linenum][i]->progress == 0xff){
-    //                     printf("ready\n");
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                         perror("Line A Patcher Message Queue");
-    //                     type_A_pile[linenum][i] = NULL;
-    //                 }
-    //                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
-
-    //             }
-
-    //         }
-    // }
-    // i = (i+1)%PILESIZE;
-    // j++;
-    // if (j == 10000)
-    //     break;
-    // }
-    // pthread_exit(0);
+            }
+    }
+    i = (i+1)%PILESIZE;
+    j++;
+    if (j == 20000) // temporary termination condition
+        break;
+    }
+    pthread_exit(0);
 }
 
 void employee_lineB(void * position){
     employee_information *temp  = (employee_information *) position;
     int linenum = temp->linenum;
     int index = temp->index;
-    //printf("%d\n",index);
     message_buf buf;
     buf.mtype=1;
     buf.payload.chocolate_type=TYPE_B;
     buf.payload.msg_type = 1;
     buf.payload.item_type = PRODUCT;
+    
     switch (linenum){
         case 0 :
             buf.payload.current_location = MANUFACTURING_LINE_B1;
@@ -305,24 +354,22 @@ void employee_lineB(void * position){
     int i = 0, j = 0;
     srand(g_Array_of_Threads_TypeB[linenum][index]);
     int step_time = (C_MIN_B + rand()) % C_MAX_B;
-    // printf("%d", index);
     while(1){
-        i = find_product(type_B_pile[linenum], i);
+        i =find_product(type_B_pile[linenum], i);
         if (i != PILESIZE)
         {
-            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i])){
-
+            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0){
                 buf.payload.id = type_B_pile[linenum][i]->id;
                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
                     perror("Line B UI Message Queue");
                 type_B_pile[linenum][i]->progress = type_B_pile[linenum][i]->progress | (1 << index);
                 usleep(step_time);
-                //printf("B : %b \n", 0 | (1 << index));
                 if (type_B_pile[linenum][i]->progress == 0x3f){
-                    printf("ready\n");
                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
                          perror("Line B Patcher Message Queue");
-                    type_B_pile[linenum][i] = NULL;
+                    type_B_pile[linenum][i]->id = 0;
+                    type_B_pile[linenum][i]->progress = 0;
+                    type_B_pile[linenum][i]->type = TYPE_B;
                 }
                 pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
 
@@ -330,7 +377,7 @@ void employee_lineB(void * position){
     }
     i = (i+1)%PILESIZE;
     j++;
-    if (j == 10)
+    if (j == 20000)// write termination condition here
         break;
     }
     pthread_exit(0);
@@ -338,101 +385,201 @@ void employee_lineB(void * position){
 }
 
 void employee_lineC(void * position){
-    // employee_information *temp  = (employee_information *) position;
-    // int linenum = temp->linenum;
-    // int index = temp->index;
-    // message_buf buf;
-    // buf.mtype=1;
-    // buf.payload.chocolate_type=TYPE_C;
-    // buf.payload.msg_type = 1;
-    // buf.payload.item_type = PRODUCT;
-    // switch (linenum){
-    //     case 0 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_C1;
-    //         break;
-    //     case 1 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_C2;
-    //         break;
-    // }
-    // buf.payload.index = index;
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+    message_buf buf;
+    buf.mtype=1;
+    buf.payload.chocolate_type=TYPE_C;
+    buf.payload.msg_type = 1;
+    buf.payload.item_type = PRODUCT;
+    switch (linenum){
+        case 0 :
+            buf.payload.current_location = MANUFACTURING_LINE_C1;
+            break;
+        case 1 :
+            buf.payload.current_location = MANUFACTURING_LINE_C2;
+            break;
+    }
+    buf.payload.index = index;
 
-    // int i = 0, j = 0;
-    // srand(g_Array_of_Threads_TypeC[linenum][index]);
-    // int step_time = (C_MIN_C + rand()) % C_MAX_C;
-    // while(1){
-    //     i = find_product(type_C_pile[linenum], i);
-    //     if (i != PILESIZE)
-    //     {
-    //         if(index < 4)
-    //         {
+    int i = 0, j = 0;
+    srand(g_Array_of_Threads_TypeC[linenum][index]);
+    int step_time = (C_MIN_C + rand()) % C_MAX_C;
+    while(1){
+        i =find_product(type_C_pile[linenum], i);
+        if (i != PILESIZE)
+        {
+            if(index < 4)
+            {
             
-    //             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i])){
-    //                 buf.payload.id = type_C_pile[linenum][i]->id;
-    //                 if  (index != 0){
+                if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
+                    buf.payload.id = type_C_pile[linenum][i]->id;
+                    if  (index != 0){
 
-    //                     if ((type_C_pile[linenum][i]->progress & (1<<(index-1))) == 1<<(index-1)){
+                        if ((type_C_pile[linenum][i]->progress & (1<<(index-1))) == 1<<(index-1)){
 
-    //                         if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                             perror("Line C UI Message Queue");
-    //                         type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
-    //                         usleep(step_time);
-    //                     }
+                            if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                                perror("Line C UI Message Queue");
+                            type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+                            usleep(step_time);
+                        }
 
-    //                 }else{
+                    }else{
 
-    //                     if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                          perror("Line C UI Message Queue");
-    //                     type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
-    //                     usleep(step_time);
+                        if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                             perror("Line C UI Message Queue");
+                        type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+                        usleep(step_time);
 
-    //                 }
-    //                 printf("C : %X\n", type_C_pile[linenum][i]->progress);
-    //                 if (type_C_pile[linenum][i]->progress == 0x1f){
-    //                     printf("ready\n");
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                         perror("Line C patcher Message Queue");
-    //                     type_C_pile[linenum][i] = NULL;
-    //                 }
-    //                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+                    }
+                    if (type_C_pile[linenum][i]->progress == 0x1f){
+                        if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+                            perror("Line C patcher Message Queue");
+                        type_C_pile[linenum][i]->id = 0;
+                        type_C_pile[linenum][i]->progress = 0;
+                        type_C_pile[linenum][i]->type = TYPE_C;
+                    }
+                    pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
 
-    //             }
-    //         } 
-    //         else
-    //         {
+                }
+            } 
+            else
+            {
 
-    //             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i])){
+                if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
 
-    //                 buf.payload.id = type_C_pile[linenum][i]->id;
-    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                     perror("Line C UI Message Queue");
-    //                 type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
-    //                 usleep(step_time);
+                    buf.payload.id = type_C_pile[linenum][i]->id;
+                    if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+                        perror("Line C UI Message Queue");
+                    type_C_pile[linenum][i]->progress = type_C_pile[linenum][i]->progress | (1<<index);
+                    usleep(step_time);
 
-    //                 printf("C : %X\n", type_C_pile[linenum][i]->progress);
-    //                 if (type_C_pile[linenum][i]->progress == 0x1f){
-    //                     printf("ready\n");
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
-    //                          perror("Line C Patcher Message Queue");
-    //                     type_C_pile[linenum][i] = NULL;
-    //                 }
+                    if (type_C_pile[linenum][i]->progress == 0x1f){
+                        if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0) == -1)
+                             perror("Line C Patcher Message Queue");
+                        type_C_pile[linenum][i]->id = 0;
+                        type_C_pile[linenum][i]->progress = 0;
+                        type_C_pile[linenum][i]->type = TYPE_C;
+                    }
 
-    //                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+                    pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
 
-    //             }
+                }
 
-    //         }
-    // }
-    // i = (i+1)%PILESIZE;
-    // j++;
-    // if (j == 10000)
-    //     break;
-    // }
-    // pthread_exit(0);
+            }
+    }
+    i = (i+1)%PILESIZE;
+    j++;
+    if (j == 20000)
+        break;
+    }
+    pthread_exit(0);
+}
+
+void patcher_routine(void *argptr){
+    int j = 0;
+    message_buf buf;
+    message_buf send;
+    send.mtype = 1;
+    send.payload.item_type = PATCH;
+    while(1){
+        if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
+            
+        }else{
+            buf.mtype = 1;
+            switch (buf.payload.chocolate_type){
+                case TYPE_A:
+                    buf.payload.current_location=PATCHING_A;
+                    break;
+                case TYPE_B:
+                    buf.payload.current_location=PATCHING_B;
+                    break;
+                case TYPE_C:
+                    buf.payload.current_location=PATCHING_C;
+                    break;
+            }
+            send.payload.current_location=buf.payload.current_location;
+            msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+
+            if (buf.payload.chocolate_type == TYPE_A){
+                pthread_mutex_lock(&patch_mutex_A);
+                type_A_patch++;
+                if (type_A_patch == 10){
+                    type_A_patch = 0;
+                    send.payload.chocolate_type = TYPE_A;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_A;
+                    patch_id_A += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_A);
+            }else if (buf.payload.chocolate_type == TYPE_B){
+                pthread_mutex_lock(&patch_mutex_B);
+                type_B_patch++;
+                if (type_B_patch == 10){
+                    type_B_patch = 0;
+                    send.payload.chocolate_type = TYPE_B;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_B;
+                    patch_id_B += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_B);
+            }else if (buf.payload.chocolate_type == TYPE_C){
+                pthread_mutex_lock(&patch_mutex_C);
+                type_C_patch++;
+                if (type_C_patch == 10){
+                    type_C_patch = 0;
+                    send.payload.chocolate_type = TYPE_C;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_C;
+                    patch_id_C += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_C);
+            }
+
+        }
+        j++;
+        if (j == 1000)//termination condition
+            break;
+    }
+    pthread_exit(0);
+}
+
+void printer_routine(void *argptr){
+    int j = 0;
+    message_buf buf;
+    while(1){
+        if(msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1){
+        }else{
+            buf.payload.current_location = PRINTER;
+            msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+            for (int i = 0; i < 10; i ++){
+                //print date on patche node
+                usleep(PRINTER_TIME);
+            }
+            // append to patche queue
+        }
+        j++;
+        if (j==1000) // termination condition needed
+            break;
+    }
 
 }
 
 void join_all(){
     int i,j;
+
+    pthread_join(generator,NULL);
+
     for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
     {
         for (i = 0; i < C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_A; i++)
@@ -457,153 +604,17 @@ void join_all(){
         }
     }
 
-    pthread_join(generator,NULL);
+    for (i = 0; i < 2; i++){
+        pthread_join(patcher_employees[i], NULL);
+    }
+
 }
 
 
 
 
 
-/*void employeeDoStepPerLine_TypeB(void *line_number_as_index)
-{ // pass line identifaier
 
-    // test on typeB lines : 2 lines and Steps 1 to 6 have to happen in order
-    int line_number_index = *((int *)line_number_as_index);
-    int time = randomIntegerInRange(C_MIN_B, C_MAX_B);
-    while (1)
-    {
-        if (line_number_index == 0)
-        {
-            if (g_count_for_mutex_index_typeB_line1 == 0)
-            { // Emp 1
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-            else if (g_count_for_mutex_index_typeB_line1 == 1)
-            {                                                                                                                 // Emp 2
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-            else if (g_count_for_mutex_index_typeB_line1 == 2)
-            {                                                                                                                 // Emp 3
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-            else if (g_count_for_mutex_index_typeB_line1 == 3)
-            {                                                                                                                 // Emp 4
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-            else if (g_count_for_mutex_index_typeB_line1 == 4)
-            {                                                                                                                 // Emp 5
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-            else if (g_count_for_mutex_index_typeB_line1 == 5)
-            {                                                                                                                 // Emp 6
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-                printf("\nEmp line 1: %d lock\n", g_count_for_mutex_index_typeB_line1 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line1]);
-            }
-
-            g_count_for_mutex_index_typeB_line1++;
-            if (g_count_for_mutex_index_typeB_line1 == 6)
-                g_count_for_mutex_index_typeB_line1 = 0;
-        }
-        else
-        {
-            if (g_count_for_mutex_index_typeB_line2 == 0)
-            { // Emp 1
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-            else if (g_count_for_mutex_index_typeB_line2 == 1)
-            {                                                                                                                 // Emp 2
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-            else if (g_count_for_mutex_index_typeB_line2 == 2)
-            {                                                                                                                 // Emp 3
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-            else if (g_count_for_mutex_index_typeB_line2 == 3)
-            {                                                                                                                 // Emp 4
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-            else if (g_count_for_mutex_index_typeB_line2 == 4)
-            {                                                                                                                 // Emp 5
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-            else if (g_count_for_mutex_index_typeB_line2 == 5)
-            {                                                                                                                 // Emp 6
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]); // To check if last mutex : relased
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2 - 1]);
-
-                pthread_mutex_lock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-                printf("\nEmp line 2: %d lock\n", g_count_for_mutex_index_typeB_line2 + 1);
-                sleep(time);
-                pthread_mutex_unlock(&g_mutexs_for_lines_of_typeB[line_number_index][g_count_for_mutex_index_typeB_line2]);
-            }
-
-            g_count_for_mutex_index_typeB_line2++;
-            if (g_count_for_mutex_index_typeB_line2 == 6)
-                g_count_for_mutex_index_typeB_line2 = 0;
-        }
-
-        time = randomIntegerInRange(C_MIN_B, C_MAX_B);
-    }
-}*/
 
 void load_user_defined_values()
 {

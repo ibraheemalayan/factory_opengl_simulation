@@ -25,7 +25,7 @@
 
 #define UISIG 7
 #define PERSON 1L
-#define PILESIZE 20
+#define PILESIZE 10
 
 enum MsgType
 {

@@ -7,6 +7,7 @@
 pid_t gui_pid = 0;
 int ui_msgq_id;
 int patcher_msgq_id;
+int printer_msgq_id;
 
 void run_gui();                         // runs the gui
 void create_and_setup_message_queues(); // creates the message queue
@@ -35,7 +36,7 @@ void run_gui()
 void create_and_setup_message_queues()
 {
 
-    key_t ui_queue_key, patcher_queue_key;
+    key_t ui_queue_key, patcher_queue_key, printer_queue_key;
 
     // remove queue if exists
     remove("ui_queue.bin");
@@ -58,6 +59,13 @@ void create_and_setup_message_queues()
         exit(1);
     }
 
+    if ((printer_queue_key = ftok("ui_queue.bin", 30)) == -1)
+    {
+        perror("ftok");
+        clean_up();
+        exit(1);
+    }
+
     ui_msgq_id = msgget(ui_queue_key, 0666 | IPC_CREAT);
     if (ui_msgq_id == -1)
     {
@@ -68,6 +76,14 @@ void create_and_setup_message_queues()
 
     patcher_msgq_id = msgget(patcher_queue_key, 0666 | IPC_CREAT);
     if (patcher_queue_key == -1)
+    {
+        perror("msgget ui queue");
+        clean_up();
+        exit(2);
+    }
+
+    printer_msgq_id = msgget(printer_queue_key, 0666 | IPC_CREAT);
+    if (printer_queue_key == -1)
     {
         perror("msgget ui queue");
         clean_up();
@@ -99,9 +115,27 @@ void create_and_setup_message_queues()
 
     patcher_queue_info.msg_qbytes = 20480;
 
-    // increase buffer size
+     // increase buffer size
     msgctl(patcher_msgq_id, IPC_SET, &patcher_queue_info);
 
+    struct msqid_ds printer_queue_info;
+    // read existing message queue info into ui_queue_info
+    if (msgctl(printer_msgq_id, IPC_STAT, &printer_queue_info) == -1)
+    {
+        perror("Can not read message queue info");
+        clean_up();
+        exit(5);
+    }
+
+    printer_queue_info.msg_qbytes = 20480;
+
+     // increase buffer size
+    msgctl(printer_msgq_id, IPC_SET, &printer_queue_info);
+
+
+
+
+   
     green_stdout();
     printf("UI message queues have been created\n");
     reset_stdout();
@@ -122,6 +156,8 @@ void clean_up()
     msgctl(ui_msgq_id, IPC_RMID, NULL);
 
     msgctl(patcher_msgq_id, IPC_RMID, NULL);
+
+    msgctl(printer_msgq_id, IPC_RMID, NULL);
 
 
     // remove the queue file
@@ -145,7 +181,7 @@ int randomIntegerInRange(int lower, int upper)
 // returns empty index if found, else returns PILESIZE
 int array_full(chocolateProduct *arr[]){
     for(int i = 0; i < PILESIZE; i++){
-        if (arr[i] == NULL)
+        if (arr[i]->id == 0)
             return i;
     }
     return PILESIZE;
@@ -153,7 +189,7 @@ int array_full(chocolateProduct *arr[]){
 
 int find_product (chocolateProduct *arr[], int start){
     for(int i = start; i < PILESIZE; i++){
-        if (arr[i] != NULL)
+        if (arr[i]->id != 0)
             return i;
     }
     return PILESIZE;
@@ -162,33 +198,39 @@ int find_product (chocolateProduct *arr[], int start){
 
 void generate_product(int empty_index, char type, int linenum){
     srand(time(NULL));
-    chocolateProduct *temp;
-    temp = (chocolateProduct *)malloc(sizeof(chocolateProduct));
+    ChocolateType type_num;
+    int id;
+    unsigned char progress;
 
     switch(type){
         case 'a' : 
-            temp->type =TYPE_A;
+            type_num =TYPE_A;
             break;
         case 'b' : 
-            temp->type =TYPE_B;
+            type_num =TYPE_B;
             break;
         case 'c' : 
-            temp->type =TYPE_C;
+            type_num =TYPE_C;
             break;
     }
 
     id_counter+=(rand()%100);
-    temp->id = id_counter;
-    temp->progress = 0;
-
+    id = id_counter;
+    progress = 0;
     if (type == 'a'){
-        type_A_pile[linenum][empty_index]=temp;
+        type_A_pile[linenum][empty_index]->id = id;
+        type_A_pile[linenum][empty_index]->progress = progress;
+        type_A_pile[linenum][empty_index]->type = type_num;
     } else if (type == 'b'){
-        type_B_pile[linenum][empty_index]=temp;
+        type_B_pile[linenum][empty_index]->id = id;
+        type_B_pile[linenum][empty_index]->progress = progress;
+        type_B_pile[linenum][empty_index]->type = type_num;
     } else if (type == 'c'){
-        type_C_pile[linenum][empty_index]=temp;
+        type_C_pile[linenum][empty_index]->id = id;
+        type_C_pile[linenum][empty_index]->progress = progress;
+        type_C_pile[linenum][empty_index]->type = type_num;
     }else{
-        printf("UNEXCPECTED: PRODUCT GENERATOR");
+        perror("UNEXCPECTED: PRODUCT GENERATOR");
     }
 }
 

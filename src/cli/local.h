@@ -29,6 +29,10 @@
 #define C_MIN_C 150
 #define C_MAX_C 1500
 
+#define PATCHER_TIME 100
+
+#define PRINTER_TIME 100
+
 #define C_EMPLOYEES_TO_PATCH_ITEMS_BEFORE_PRINTING 2
 #define C_ITEMS_PER_PATCH 10
 #define C_ITEMS_PER_CARTON_BOX 20 // basically 2 patches
