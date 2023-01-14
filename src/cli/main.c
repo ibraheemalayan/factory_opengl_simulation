@@ -27,6 +27,67 @@ int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
 void employeeDoStepPerLine_TypeB(void *line_number_as_index);
 
+//New Mohammad
+
+
+
+struct chocolateInformation{
+        char chocolateType;
+        int isDatePrinted;// 0 , 1
+        //add any extra information as index in  the ui
+
+};
+struct chocolateNode{
+        struct chocolateInformation chocolateInfo;
+        struct chocolateNode * next;
+        
+};
+
+
+//.........................GLOBALS..............
+
+// Pointers to The printer queue
+struct chocolateNode *FrontPrinterQueue = NULL;
+struct chocolateNode *RearPrinterQueue  = NULL;
+
+// Pointers to The containerTypeA queue
+struct chocolateNode *FrontContainerTypeAQueue = NULL;
+struct chocolateNode *RearContainerTypeAQueue  = NULL;
+// Pointers to The containerTypeA queue
+struct chocolateNode *FrontContainerTypeBQueue = NULL;
+struct chocolateNode *RearContainerTypeBQueue  = NULL;
+// Pointers to The containerTypeA queue
+struct chocolateNode *FrontContainerTypeCQueue = NULL;
+struct chocolateNode *RearContainerTypeCQueue  = NULL;
+
+//Mutex on printing Queue
+pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+//Mutex on Container QueueS // index 0:A, 1:B, 2:C 
+pthread_mutex_t G_mutexs_for_Container_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+
+//Number of chocolate products in containers
+int G_numberOfchocolateInContainerTypeA = 0;
+int G_numberOfchocolateInContainerTypeB = 0;
+int G_numberOfchocolateInContainerTypeC = 0;
+
+int G_numberOfchocolateInPrintingQueue = 0;
+
+
+
+struct chocolateInformation dequeueNodeFromContainerQueue(pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, int *numberOfchocolateInContainerTypeT);
+void enqueueToContainerQueue(struct chocolateInformation chocolateInfo, pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, struct chocolateNode **RearQueue, int *numberOfchocolateInContainerTypeT);
+void displyContainerQueueA();
+void displyPrintingQueue();
+void testContainerAQueue();
+void testPrintingQueue();
+struct chocolateInformation dequeueFromPrinterQueue();
+void enqueuToPrinterQueue(struct chocolateInformation chocolateInfo);
+test_simulation();
+void createThreadsForEmpsWorkfromPrinterToContainers();
+
+// end new 
+
 void main()
 {
     load_user_defined_values();
@@ -38,7 +99,10 @@ void main()
     // register signal handler for SIGINT to clean up
     signal(SIGINT, interrupt_sig_handler);
 
-    start_simulation();
+    //start_simulation();
+    test_simulation();
+    
+
 
     clean_up();
 
@@ -411,4 +475,234 @@ int randomIntegerInRange(int lower, int upper)
 {
     srand(time(NULL)); // randomize seed
     return (rand() % (upper - lower + 1)) + lower;
+}
+
+
+
+//new Moahammad 
+
+/*Noor : use this function with the two threads:
+ "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
+ Hint 1 :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */ 
+ /*Noor
+ Hint 2 :enqueuToPrinterQueue & dequeueFromPrinterQueue became deal with just one Item of chocolate
+ */
+ 
+
+void enqueuToPrinterQueue(struct chocolateInformation chocolateInfo){
+        pthread_mutex_lock(&printingQueue_mutex);
+        struct chocolateNode *ptr = (struct chocolateNode *)malloc(sizeof(struct chocolateNode));
+        if (ptr == NULL)
+        {
+                printf("\nOVERFLOW\n");
+                return;
+        }
+        else
+        {
+                //ToDo Update index for ui 
+                
+                ptr->chocolateInfo=chocolateInfo;
+                if (FrontPrinterQueue == NULL)
+                {
+                        FrontPrinterQueue = ptr;
+                        RearPrinterQueue = ptr;
+                        FrontPrinterQueue->next = NULL;
+                        RearPrinterQueue->next= NULL;
+                }
+                else
+                {
+                        RearPrinterQueue->next = ptr;
+                        RearPrinterQueue = ptr;
+                        RearPrinterQueue->next = NULL;
+                }
+        G_numberOfchocolateInPrintingQueue++;        
+        //usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
+        }
+        pthread_mutex_unlock(&printingQueue_mutex); 
+}
+
+
+struct chocolateInformation dequeueFromPrinterQueue(){
+        
+        struct chocolateNode *chocolate= NULL;
+        struct chocolateInformation chocolateInfo = {0};
+        if (FrontPrinterQueue == NULL)
+        {
+                printf("Underflow\n");
+                return chocolateInfo;
+        }
+        else
+        {
+                chocolate = FrontPrinterQueue;
+                chocolateInfo = chocolate->chocolateInfo;
+                FrontPrinterQueue = FrontPrinterQueue->next;
+                if(FrontPrinterQueue == NULL)
+                    RearPrinterQueue =NULL;
+
+                free(chocolate);
+                G_numberOfchocolateInPrintingQueue--;
+
+                
+        }
+        return chocolateInfo; 
+}
+
+void testPrintingQueue(){
+        struct chocolateInformation ch1;
+        ch1.chocolateType='A';
+        ch1.isDatePrinted=0;
+        enqueuToPrinterQueue(ch1);
+        struct chocolateInformation ch2;
+        ch2.chocolateType='A';
+        ch2.isDatePrinted=0;
+        enqueuToPrinterQueue(ch2);
+        displyPrintingQueue();
+
+}
+
+void testContainerAQueue(){
+        struct chocolateInformation ch1= dequeueFromPrinterQueue();
+        enqueueToContainerQueue(ch1, &G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &RearContainerTypeAQueue, &G_numberOfchocolateInContainerTypeA);
+        struct chocolateInformation ch2= dequeueFromPrinterQueue(); 
+        enqueueToContainerQueue(ch2, &G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &RearContainerTypeAQueue, &G_numberOfchocolateInContainerTypeA);
+        displyContainerQueueA();
+        //dequeueNodeFromContainerQueue(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolateInContainerTypeA);
+        //dequeueNodeFromContainerQueue(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolateInContainerTypeA);
+        //displyContainerQueueA();
+
+
+}
+void displyPrintingQueue()
+{
+
+    struct chocolateNode *temp = NULL;
+    if ((FrontPrinterQueue == NULL) && (RearPrinterQueue == NULL))
+    {
+        printf("\n\nPrinting Queue is Empty\n");
+    }
+    else
+    {
+        printf("\n\nThe Printing Queue is :\n\n");
+        temp = FrontPrinterQueue;
+        while (temp)
+        {
+            printf("\n\n%c  %d\n\n", temp->chocolateInfo.chocolateType, temp->chocolateInfo.isDatePrinted);
+            temp = temp->next;
+        }
+    }
+}
+
+void displyContainerQueueA()
+{
+
+    struct chocolateNode *temp = NULL;
+    if ((FrontContainerTypeAQueue == NULL))
+    {
+        printf("\n\nContainer Queue A is Empty\n");
+    }
+    else
+    {
+        printf("\n\nThe Container Queue A is :\n\n");
+        temp = FrontContainerTypeAQueue;
+        while (temp)
+        {
+            printf("\n\n%c  %d\n\n", temp->chocolateInfo.chocolateType, temp->chocolateInfo.isDatePrinted);
+            temp = temp->next;
+        }
+    }
+}
+
+
+
+
+void enqueueToContainerQueue(struct chocolateInformation chocolateInfo, pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, struct chocolateNode **RearQueue, int *numberOfchocolateInContainerTypeT)
+{
+    pthread_mutex_lock(mutex);
+    struct chocolateNode *ptr = (struct chocolateNode *)malloc(sizeof(struct chocolateNode));
+    if (ptr == NULL)
+    {
+        printf("\nOVERFLOW \n");
+        return;
+    }
+    else
+    {
+        // update Index for ui
+        ptr->chocolateInfo=chocolateInfo;
+        if ((*FrontQueue) == NULL)
+        {
+            (*FrontQueue) = ptr;
+            (*RearQueue) = ptr;
+            (*FrontQueue)->next= NULL;
+            (*RearQueue)->next = NULL;
+        }
+        else
+        {
+            (*RearQueue)->next = ptr;
+            (*RearQueue) = ptr;
+            (*RearQueue)->next = NULL;
+        }
+        //sleep
+        (*numberOfchocolateInContainerTypeT)++;
+    }
+    pthread_mutex_unlock(mutex);
+}
+
+struct chocolateInformation dequeueNodeFromContainerQueue(pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, int *numberOfchocolateInContainerTypeT)
+{
+    pthread_mutex_lock(mutex);
+    struct chocolateNode *temp = NULL;
+    struct chocolateInformation chocolate = {0};
+    // update Index in ui
+    if ((*FrontQueue) == NULL)
+    {
+        printf("Underflow\n");
+        return chocolate;
+    }
+    else
+    {
+        temp = (*FrontQueue);
+        chocolate = temp->chocolateInfo;
+        // update Index
+        (*FrontQueue) = (*FrontQueue)->next;
+        free(temp);
+        (*numberOfchocolateInContainerTypeT)--;
+    }
+    pthread_mutex_unlock(mutex);
+    return chocolate;
+}
+
+
+void insertToContainers(){
+    while (1)
+    {   struct chocolateInformation  chocolate;
+        pthread_mutex_lock(&printingQueue_mutex);
+        if(G_numberOfchocolateInPrintingQueue >0){
+            chocolate = dequeueFromPrinterQueue();
+            if (chocolate.chocolateType =='A')
+                enqueueToContainerQueue(chocolate, &G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &RearContainerTypeAQueue, &G_numberOfchocolateInContainerTypeA);
+            else if (chocolate.chocolateType =='B')
+                enqueueToContainerQueue(chocolate, &G_mutexs_for_Container_Queues[1], &FrontContainerTypeBQueue, &RearContainerTypeBQueue, &G_numberOfchocolateInContainerTypeB);
+            else if (chocolate.chocolateType =='C')
+                enqueueToContainerQueue(chocolate, &G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &RearContainerTypeCQueue, &G_numberOfchocolateInContainerTypeC); 
+        }
+        pthread_mutex_unlock(&printingQueue_mutex);  
+    }
+    
+}
+
+void createThreadsForEmpsWorkfromPrinterToContainers(){
+    /* create a new 3 threads that will keep move chocolate from Printer Queue To Containers Queues */
+    pthread_t p_thread1;
+    pthread_create(&p_thread1, NULL, (void *)insertToContainers, NULL);
+    pthread_t p_thread2;
+    pthread_create(&p_thread2, NULL, (void *)insertToContainers, NULL);
+    pthread_t p_thread3;
+    pthread_create(&p_thread3, NULL, (void *)insertToContainers, NULL);
+} 
+
+test_simulation(){
+    testPrintingQueue();
+    createThreadsForEmpsWorkfromPrinterToContainers();
+    sleep(5);
+    displyContainerQueueA();
 }

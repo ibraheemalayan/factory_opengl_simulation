@@ -117,6 +117,7 @@ void draw_walls()
     draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, 50, -200, wall_thickness, R, G, B);
     draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, -50, -200, wall_thickness, R, G, B);
 
+
     // ****************************
     // Metal Detector Wall
     // ****************************
