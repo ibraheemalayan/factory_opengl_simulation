@@ -102,24 +102,12 @@ void draw_walls()
     float wall_thickness = ROLLING_CROSS_SIZE / 10;
     float wall_x = ROLLING_CROSSS_X - wall_thickness / 2;
 
-    float gate_1_top = ROLLING_CROSSS_Y + ROLLING_CROSS_SIZE / 2;
-    draw_rectangle(wall_x, gate_1_top, wall_thickness, 500 - gate_1_top, R, G, B);
-
-    float gate_2_bottom = -ROLLING_CROSSS_Y - ROLLING_CROSS_SIZE / 2;
-    draw_rectangle(wall_x, gate_2_bottom, wall_thickness, -500 + gate_1_top, R, G, B);
-
-    float gate_1_bottom_y = ROLLING_CROSSS_Y - ROLLING_CROSS_SIZE / 2;
-    float gate_2_top_y = -ROLLING_CROSSS_Y + ROLLING_CROSS_SIZE / 2;
-
-    draw_rectangle(wall_x, gate_2_top_y, wall_thickness, gate_1_bottom_y - gate_2_top_y, R, G, B);
-
-    // middle wall
-    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, 50, -200, wall_thickness, R, G, B);
-    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, -50, -200, wall_thickness, R, G, B);
-
+    // printer h-walls
+    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, 60, -200, wall_thickness, R, G, B);
+    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, -65, -200, wall_thickness, R, G, B);
 
     // ****************************
-    // Metal Detector Wall
+    // Printer Vertical Wall
     // ****************************
 
     float wall_2_x = METAL_DETECTOR_X - wall_thickness / 2;
@@ -127,8 +115,8 @@ void draw_walls()
     float metal_detector_top = METAL_DETECTOR_SIZE / 2;
     float metal_detector_bottom = -METAL_DETECTOR_SIZE / 2;
 
-    draw_rectangle(wall_2_x, metal_detector_top, wall_thickness, 500 + metal_detector_top, R, G, B);
-    draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, -500 + metal_detector_bottom, R, G, B);
+    draw_rectangle(wall_2_x, metal_detector_top, wall_thickness, metal_detector_top, R, G, B);
+    draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, metal_detector_bottom, R, G, B);
 }
 
 void draw_printer_animation(GLfloat x, GLfloat y, float rotation)

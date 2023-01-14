@@ -90,9 +90,7 @@ enum Location
   CARTON_BOX_C,
 
   // storage
-  STORAGE_AREA_A,
-  STORAGE_AREA_B,
-  STORAGE_AREA_C,
+  STORAGE_AREA,
 
   // trucks
   TRUCK_1,

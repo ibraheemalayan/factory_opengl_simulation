@@ -261,7 +261,6 @@ int main(int argc, char **argv)
     locations_ptrs[0] = NULL;  // location of undefined
     locations_ptrs[23] = NULL; // location of delivered
 
-
     for (int i = 0; i <= 22; i++)
     {
         locations_ptrs[i] = (LocationObject *)malloc(sizeof(LocationObject));

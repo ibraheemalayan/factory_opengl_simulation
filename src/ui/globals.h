@@ -38,9 +38,7 @@ LocationObject
     *carton_box_c_location_obj,
 
     // storage
-    *storage_area_a_location_obj,
-    *storage_area_b_location_obj,
-    *storage_area_c_location_obj,
+    *storage_area_location_obj,
 
     // trucks
     *truck_1_location_obj,

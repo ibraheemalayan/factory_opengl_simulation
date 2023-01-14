@@ -97,6 +97,54 @@ void initialize_queues_coordinates(LocationObject *locations[])
     locations[PATCHING_C]->width = PATCHING_WIDTH;
     locations[PATCHING_C]->height = PATCHING_HEIGHT;
     locations[PATCHING_C]->current_items = 0;
+
+    locations[PRINTER]->coords.x = PRINTER_X_VALUE;
+    locations[PRINTER]->coords.y = PRINTER_Y_VALUE;
+    locations[PRINTER]->width = PRINTER_WIDTH;
+    locations[PRINTER]->height = PRINTER_HEIGHT;
+    locations[PRINTER]->current_items = 0;
+
+    locations[CONTAINER_A]->coords.x = CONTAINER_X_VALUE;
+    locations[CONTAINER_A]->coords.y = A_CONTAINER_Y_VALUE;
+    locations[CONTAINER_A]->width = CONTAINER_WIDTH;
+    locations[CONTAINER_A]->height = CONTAINER_HEIGHT;
+    locations[CONTAINER_A]->current_items = 0;
+
+    locations[CONTAINER_B]->coords.x = CONTAINER_X_VALUE;
+    locations[CONTAINER_B]->coords.y = B_CONTAINER_Y_VALUE;
+    locations[CONTAINER_B]->width = CONTAINER_WIDTH;
+    locations[CONTAINER_B]->height = CONTAINER_HEIGHT;
+    locations[CONTAINER_B]->current_items = 0;
+
+    locations[CONTAINER_C]->coords.x = CONTAINER_X_VALUE;
+    locations[CONTAINER_C]->coords.y = C_CONTAINER_Y_VALUE;
+    locations[CONTAINER_C]->width = CONTAINER_WIDTH;
+    locations[CONTAINER_C]->height = CONTAINER_HEIGHT;
+    locations[CONTAINER_C]->current_items = 0;
+
+    locations[STORAGE_AREA]->coords.x = STORAGE_X_VALUE;
+    locations[STORAGE_AREA]->coords.y = STORAGE_Y_VALUE;
+    locations[STORAGE_AREA]->width = STORAGE_WIDTH;
+    locations[STORAGE_AREA]->height = STORAGE_HEIGHT;
+    locations[STORAGE_AREA]->current_items = 0;
+
+    locations[TRUCK_1]->coords.x = TRUCK_PARKING_X_VALUE;
+    locations[TRUCK_1]->coords.y = TRUCK_1_PARKING_Y_VALUE;
+    locations[TRUCK_1]->width = TRUCK_PARKING_WIDTH;
+    locations[TRUCK_1]->height = TRUCK_PARKING_HEIGHT;
+    locations[TRUCK_1]->current_items = 0;
+
+    locations[TRUCK_2]->coords.x = TRUCK_PARKING_X_VALUE;
+    locations[TRUCK_2]->coords.y = TRUCK_2_PARKING_Y_VALUE;
+    locations[TRUCK_2]->width = TRUCK_PARKING_WIDTH;
+    locations[TRUCK_2]->height = TRUCK_PARKING_HEIGHT;
+    locations[TRUCK_2]->current_items = 0;
+
+    locations[TRUCK_3]->coords.x = TRUCK_PARKING_X_VALUE;
+    locations[TRUCK_3]->coords.y = TRUCK_3_PARKING_Y_VALUE;
+    locations[TRUCK_3]->width = TRUCK_PARKING_WIDTH;
+    locations[TRUCK_3]->height = TRUCK_PARKING_HEIGHT;
+    locations[TRUCK_3]->current_items = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(LocationObject *location)
