@@ -59,10 +59,10 @@ void paint_and_swap_frame()
 
     drawMetalDetector();
 
-    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y, male_rolling_gate_rotation);
-    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y, female_rolling_gate_rotation);
+    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, PRINTER_ANIMATION_Y_VALUE, male_rolling_gate_rotation);
+    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, -PRINTER_ANIMATION_Y_VALUE, -female_rolling_gate_rotation);
 
-    // draw_rolling_gate(0, -100);
+    // draw_printer_animation(0, -100);
 
     draw_items_in_queues();
 
@@ -207,8 +207,8 @@ void recursive_timed_update(int time)
 
     update_moving_items_locations();
 
-    male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
-    female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
+    male_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
+    female_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)
@@ -258,8 +258,9 @@ int main(int argc, char **argv)
 
     setup_ui(argc, argv);
 
-    locations_ptrs[0] = NULL;
-    locations_ptrs[23] = NULL;
+    locations_ptrs[0] = NULL;  // location of undefined
+    locations_ptrs[23] = NULL; // location of delivered
+
 
     for (int i = 0; i <= 22; i++)
     {

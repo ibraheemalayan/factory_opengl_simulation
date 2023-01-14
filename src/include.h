@@ -121,6 +121,18 @@ struct message_payload
   int ids_to_delete[10]; // can be ids of items, patches, boxes
 };
 
+struct Object
+{
+  int id;
+  ItemType pkg_type;
+  ChocolateType chocolate_type;
+
+  int index_in_queue;
+  Location current_location;
+};
+
+typedef struct Object Object;
+
 typedef struct message_payload message_payload;
 
 struct message_buf

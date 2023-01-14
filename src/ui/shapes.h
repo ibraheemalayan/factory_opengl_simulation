@@ -13,7 +13,7 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, 
 
 void draw_item(Item *item);
 void drawMetalDetector();
-void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
+void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
 
 /*
  * Function that handles the drawing of a circle using the triangle fan
@@ -99,22 +99,24 @@ void draw_walls()
 {
     int R = 100, G = 0, B = 100;
 
-    float wall_thickness = ROLLING_GATE_SIZE / 10;
-    float wall_x = ROLLING_GATES_X - wall_thickness / 2;
+    float wall_thickness = ROLLING_CROSS_SIZE / 10;
+    float wall_x = ROLLING_CROSSS_X - wall_thickness / 2;
 
-    float gate_1_top = ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+    float gate_1_top = ROLLING_CROSSS_Y + ROLLING_CROSS_SIZE / 2;
     draw_rectangle(wall_x, gate_1_top, wall_thickness, 500 - gate_1_top, R, G, B);
 
-    float gate_2_bottom = -ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
+    float gate_2_bottom = -ROLLING_CROSSS_Y - ROLLING_CROSS_SIZE / 2;
     draw_rectangle(wall_x, gate_2_bottom, wall_thickness, -500 + gate_1_top, R, G, B);
 
-    float gate_1_bottom_y = ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
-    float gate_2_top_y = -ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+    float gate_1_bottom_y = ROLLING_CROSSS_Y - ROLLING_CROSS_SIZE / 2;
+    float gate_2_top_y = -ROLLING_CROSSS_Y + ROLLING_CROSS_SIZE / 2;
 
     draw_rectangle(wall_x, gate_2_top_y, wall_thickness, gate_1_bottom_y - gate_2_top_y, R, G, B);
 
     // middle wall
-    // draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
+    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, 50, -200, wall_thickness, R, G, B);
+    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, -50, -200, wall_thickness, R, G, B);
+
 
     // ****************************
     // Metal Detector Wall
@@ -129,9 +131,9 @@ void draw_walls()
     draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, -500 + metal_detector_bottom, R, G, B);
 }
 
-void draw_rolling_gate(GLfloat x, GLfloat y, float rotation)
+void draw_printer_animation(GLfloat x, GLfloat y, float rotation)
 {
-    float height = ROLLING_GATE_SIZE, width = ROLLING_GATE_SIZE, thickness = ROLLING_GATE_SIZE / 10;
+    float height = ROLLING_CROSS_SIZE, width = ROLLING_CROSS_SIZE, thickness = ROLLING_CROSS_SIZE / 10;
 
     glPushMatrix();
 

@@ -79,6 +79,24 @@ void initialize_queues_coordinates(LocationObject *locations[])
     locations[MANUFACTURING_LINE_C2]->width = C_MANUFACTURING_LINE_WIDTH;
     locations[MANUFACTURING_LINE_C2]->height = MANUFACTURING_LINE_HEGHIT;
     locations[MANUFACTURING_LINE_C2]->current_items = 0;
+
+    locations[PATCHING_A]->coords.x = PATCHING_X_VALUE;
+    locations[PATCHING_A]->coords.y = A_PATCHING_Y_VALUE;
+    locations[PATCHING_A]->width = PATCHING_WIDTH;
+    locations[PATCHING_A]->height = PATCHING_HEIGHT;
+    locations[PATCHING_A]->current_items = 0;
+
+    locations[PATCHING_B]->coords.x = PATCHING_X_VALUE;
+    locations[PATCHING_B]->coords.y = B_PATCHING_Y_VALUE;
+    locations[PATCHING_B]->width = PATCHING_WIDTH;
+    locations[PATCHING_B]->height = PATCHING_HEIGHT;
+    locations[PATCHING_B]->current_items = 0;
+
+    locations[PATCHING_C]->coords.x = PATCHING_X_VALUE;
+    locations[PATCHING_C]->coords.y = C_PATCHING_Y_VALUE;
+    locations[PATCHING_C]->width = PATCHING_WIDTH;
+    locations[PATCHING_C]->height = PATCHING_HEIGHT;
+    locations[PATCHING_C]->current_items = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(LocationObject *location)
