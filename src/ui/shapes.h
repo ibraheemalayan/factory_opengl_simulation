@@ -13,6 +13,7 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, 
 
 void draw_item(Item *item);
 void drawMetalDetector();
+void draw_text();
 void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
 
 /*
@@ -182,47 +183,97 @@ void background()
     glClearColor(0.95, 0.95, 0.95, 1.0);
 }
 
-void draw_teller_text()
+void draw_text()
 {
-    char *string1 = "Bx";
+    char *string1 = "Manufacturing";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(TELLER_TEXT_X, TELLER_Bx_Y_VALUE); // define position on the screen
-    for (size_t i = 0; i < 2; i++)
+    glRasterPos2f(MANUFACTURING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 13; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string1[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string1[i]);
     }
     glEnd();
 
-    char *string2 = "Ix";
+    char *string2 = "Patching";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(TELLER_TEXT_X, TELLER_Ix_Y_VALUE); // define position on the screen
-    for (size_t i = 0; i < 2; i++)
+    glRasterPos2f(PATCHING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 8; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string2[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string2[i]);
     }
     glEnd();
 
-    char *string3 = "Tx";
+    char *string6 = "Printing";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(TELLER_TEXT_X, TELLER_Tx_Y_VALUE); // define position on the screen
-    for (size_t i = 0; i < 2; i++)
+    glRasterPos2f(PRINTING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 8; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string3[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string6[i]);
     }
     glEnd();
 
-    char *string4 = "Rx";
+    char *string3 = "Containers";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(TELLER_TEXT_X, TELLER_Rx_Y_VALUE); // define position on the screen
-    for (size_t i = 0; i < 2; i++)
+    glRasterPos2f(CONTAINER_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 10; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string4[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string3[i]);
     }
     glEnd();
+
+    char *string4 = "Storage";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(STORAGE_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 7; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string4[i]);
+    }
+    glEnd();
+
+    char *string5 = "Truck Parking";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(TRUCK_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
+    for (size_t i = 0; i < 13; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string5[i]);
+    }
+    glEnd();
+
+    // char *string2 = "Ix";
+
+    // glColor3f(0.0, 0.0, 0.0);
+    // glRasterPos2f(TELLER_TEXT_X, TELLER_Ix_Y_VALUE); // define position on the screen
+    // for (size_t i = 0; i < 2; i++)
+    // {
+    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string2[i]);
+    // }
+    // glEnd();
+
+    // char *string3 = "Tx";
+
+    // glColor3f(0.0, 0.0, 0.0);
+    // glRasterPos2f(TELLER_TEXT_X, TELLER_Tx_Y_VALUE); // define position on the screen
+    // for (size_t i = 0; i < 2; i++)
+    // {
+    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string3[i]);
+    // }
+    // glEnd();
+
+    // char *string4 = "Rx";
+
+    // glColor3f(0.0, 0.0, 0.0);
+    // glRasterPos2f(TELLER_TEXT_X, TELLER_Rx_Y_VALUE); // define position on the screen
+    // for (size_t i = 0; i < 2; i++)
+    // {
+    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string4[i]);
+    // }
+    // glEnd();
 }
 
 #endif

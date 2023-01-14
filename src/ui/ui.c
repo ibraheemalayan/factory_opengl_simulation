@@ -53,7 +53,7 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_locations(locations_ptrs);
 
-    draw_teller_text();
+    draw_text();
 
     draw_walls();
 
@@ -61,8 +61,6 @@ void paint_and_swap_frame()
 
     draw_printer_animation(PRINTER_ANIMATION_X_VALUE, PRINTER_ANIMATION_Y_VALUE, male_rolling_gate_rotation);
     draw_printer_animation(PRINTER_ANIMATION_X_VALUE, -PRINTER_ANIMATION_Y_VALUE, -female_rolling_gate_rotation);
-
-    // draw_printer_animation(0, -100);
 
     draw_items_in_queues();
 
@@ -217,12 +215,12 @@ void setup_ui(int argc, char **argv)
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
 
-    glutInitWindowSize(900, 450);                // Set the window's initial width & height
-    glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
-    glutCreateWindow("OIM Simulation");          // Create a window with the given title
-    glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
-    glutReshapeFunc(reshape);                    // Static display
-    glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
+    glutInitWindowSize(900, 450);                            // Set the window's initial width & height
+    glutInitWindowPosition(0, 0);                            // Position the window's initial top-left corner of the screen
+    glutCreateWindow("Chocolate Factory OpenGL Simulation"); // Create a window with the given title
+    glutDisplayFunc(paint_and_swap_frame);                   // Register display callback handler for window re-paint
+    glutReshapeFunc(reshape);                                // Static display
+    glutTimerFunc(0, recursive_timed_update, 0);             // Call function after specified amount of time
 
     background(); // Background color
 }
