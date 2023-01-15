@@ -25,19 +25,7 @@
 
 #define UISIG 7
 #define PERSON 1L
-
-enum MsgType
-{
-  ITEM = 1,
-  NEWPATCH,
-  NEWBOX,
-  NEWTRUCK,
-
-  PATCHUPDATED,
-  BOXUPDATED,
-  ITEMUPDATED,
-  TRUCKUPDATED,
-};
+#define MAX_BOXES_PER_TRUCK 15
 
 enum ItemType
 {
@@ -103,9 +91,18 @@ enum Location
 };
 
 typedef enum Location Location;
-typedef enum MsgType MsgType;
 typedef enum ChocolateType ChocolateType;
 typedef enum ItemType ItemType;
+
+enum MsgType
+{
+  OBJECT_CREATED = 1,
+  OBJECT_MOVED,
+  TRUCK_LEFT,
+  TRUCK_RETURNED
+};
+
+typedef enum MsgType MsgType;
 
 struct message_payload
 {
@@ -116,8 +113,38 @@ struct message_payload
   ChocolateType chocolate_type;
   ItemType item_type;
   // used to delete items when turned into another object
-  int ids_to_delete[10]; // can be ids of items, patches, boxes
+  int ids_to_delete[MAX_BOXES_PER_TRUCK]; // can be ids of items, patches, boxes
 };
+
+// when an object is created:
+//     msg_type = OBJECT_CREATED
+//     ids_to_delete = ids of objects to hide (if any), like:
+//                     the 10 items that were turned into a patch
+//                     the 2 patches that were turned into a box
+
+// when a truck leaves:
+//     msg_type = TRUCK_LEFT
+//     index = the truck number (1, 2 or 3)
+//     ids_to_delete = the ids of N boxes that were filled in the leaving truck (N <= MAX_BOXES_PER_TRUCK, remaining cells must be NULL or 0)
+
+// when an object is moved:
+//     msg_type = OBJECT_MOVED
+//     ids_to_delete = NULL
+
+// when a truck returns:
+//     msg_type = TRUCK_RETURNED
+//     index = the truck number (1, 2 or 3)
+//     ids_to_delete = NULL
+
+typedef struct message_payload message_payload;
+
+struct message_buf
+{
+  long mtype; // first field of the message struct should be the message type
+  message_payload payload;
+};
+
+typedef struct message_buf message_buf;
 
 struct Object
 {
@@ -130,15 +157,5 @@ struct Object
 };
 
 typedef struct Object Object;
-
-typedef struct message_payload message_payload;
-
-struct message_buf
-{
-  long mtype; // first field of the message struct should be the message type
-  message_payload payload;
-};
-
-typedef struct message_buf message_buf;
 
 #endif

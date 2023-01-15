@@ -129,20 +129,20 @@ void initialize_queues_coordinates(LocationObject *locations[])
     locations[STORAGE_AREA]->height = STORAGE_HEIGHT;
     locations[STORAGE_AREA]->current_items = 0;
 
-    locations[TRUCK_1]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_1]->coords.y = TRUCK_1_PARKING_Y_VALUE;
+    locations[TRUCK_1]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_1]->coords.y = TRUCK_1_ROAD_Y_VALUE;
     locations[TRUCK_1]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_1]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_1]->current_items = 0;
 
-    locations[TRUCK_2]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_2]->coords.y = TRUCK_2_PARKING_Y_VALUE;
+    locations[TRUCK_2]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_2]->coords.y = TRUCK_2_ROAD_Y_VALUE;
     locations[TRUCK_2]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_2]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_2]->current_items = 0;
 
-    locations[TRUCK_3]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_3]->coords.y = TRUCK_3_PARKING_Y_VALUE;
+    locations[TRUCK_3]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_3]->coords.y = TRUCK_3_ROAD_Y_VALUE;
     locations[TRUCK_3]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_3]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_3]->current_items = 0;
@@ -198,6 +198,58 @@ void update_item_location(ItemObj *item)
         else
         {
             item->current_coords.y += (remaing_distance > 0) ? -STEP_SIZE / 2 : STEP_SIZE / 2;
+        }
+    }
+}
+
+void update_truck_locations()
+{
+
+    // update truck 1 x coordinates
+    if (truck_1_x_distance != truck_1_x_destintation)
+    {
+
+        float remaing_distance = truck_1_x_distance - truck_1_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_1_x_distance = truck_1_x_destintation;
+        }
+        else
+        {
+            truck_1_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
+        }
+    }
+
+    // update truck 2 x coordinates
+    if (truck_2_x_distance != truck_2_x_destintation)
+    {
+
+        float remaing_distance = truck_2_x_distance - truck_2_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_2_x_distance = truck_2_x_destintation;
+        }
+        else
+        {
+            truck_2_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
+        }
+    }
+
+    // update truck 3 x coordinates
+    if (truck_3_x_distance != truck_3_x_destintation)
+    {
+
+        float remaing_distance = truck_3_x_distance - truck_3_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_3_x_distance = truck_3_x_destintation;
+        }
+        else
+        {
+            truck_3_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
         }
     }
 }
