@@ -47,7 +47,7 @@ LocationObject
 
 // Person *people[500];
 
-int people_count = 10;
+int items_count = 10;
 
 int simulation_finished = 0;
 

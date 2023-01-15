@@ -8,10 +8,10 @@
 
 void reshape(int, int);
 void background();
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color);
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B);
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B);
 
-void draw_item(Item *item);
+void draw_item(ItemObj *item);
 void drawMetalDetector();
 void draw_text();
 void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
@@ -25,7 +25,7 @@ void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
  *	y (GLFloat) - the y position of the center point of the circle
  *	radius (GLFloat) - the radius that the painted circle will have
  */
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
 {
     int i;
     int triangleAmount = 30; // # of triangles used to draw circle
@@ -34,7 +34,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
     GLfloat twicePi = 2.0f * M_PI;
 
     glBegin(GL_TRIANGLE_FAN);
-    glColor3ubv(color);
+    glColor3ub(R, G, B);
     glVertex2f(x, y); // center of circle
     for (i = 0; i <= triangleAmount; i++)
     {
@@ -45,7 +45,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
     glEnd();
 }
 
-void draw_item(Item *item)
+void draw_item(ItemObj *item)
 {
 
     GLubyte *color = NULL;
@@ -67,12 +67,13 @@ void draw_item(Item *item)
     switch (item->pkg_type)
     {
     case PRODUCT:
-        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color);
+        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color[0], color[1], color[2]);
         break;
 
     case PATCH:
         glBegin(GL_TRIANGLES);
-        glColor3ubv(color);
+        // glColor3ubv(color);
+        glColor3ub(color[0], color[1], color[2]);
         glVertex2f(item->current_coords.x + 15, item->current_coords.y - 15);
         glVertex2f(item->current_coords.x - 15, item->current_coords.y - 15);
         glVertex2f(item->current_coords.x, item->current_coords.y + 15);
@@ -81,6 +82,8 @@ void draw_item(Item *item)
 
     case CARTON_BOX:
         draw_rectangle(item->current_coords.x, item->current_coords.y, 30, 30, color[0], color[1], color[2]);
+        // draw_rectangle(item->current_coords.x, item->current_coords.y, 30, 30, 0, 0, 0);
+
         break;
     }
 }

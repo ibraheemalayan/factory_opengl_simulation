@@ -93,7 +93,6 @@ void draw_items_in_queues()
 }
 void update_moving_items_locations()
 {
-    return;
     for (int i = 0; i < ht->size; i++)
     {
         if (ht->items[i])
@@ -225,24 +224,50 @@ void setup_ui(int argc, char **argv)
     background(); // Background color
 }
 
-// void create_random_people()
-// {
+int random_int_in_range(int lower, int upper)
+{
+    int r = (rand() % (upper - lower + 1)) + lower;
+    return r;
+}
 
-//     for (int i = 1; i < people_count; i++)
-//     {
+void create_random_items(LocationObject *locations[])
+{
 
-//         gender g = (rand() % 2) ? Male : Female;
-//         LocationObject *q = (g == Male) ? queue_A1 : queue_A2;
+    for (int i = 1; i < 100; i++)
+    {
 
-//         Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+        ChocolateType c_type = random_int_in_range(TYPE_A, TYPE_C);
+        ItemType p_type = random_int_in_range(PRODUCT, CARTON_BOX);
 
-//         p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
+        int rand_queue_index = random_int_in_range(1, 22);
 
-//         ht_insert(ht, p->id, p);
+        if (p_type == PRODUCT)
+        {
 
-//         q->current_people++;
-//     }
-// }
+            rand_queue_index = random_int_in_range(1, 7);
+        }
+        else if (p_type == PATCH)
+        {
+            rand_queue_index = random_int_in_range(8, 17);
+        }
+        else // if (p_type == BOX)
+        {
+            rand_queue_index = random_int_in_range(18, 22);
+        }
+
+        LocationObject *q = locations[rand_queue_index];
+
+        ItemObj *item_obj = create_item_obj(i, i % 4, p_type, c_type, q);
+
+        item_obj->destination_coords = get_queue_location_coords_for_index(q, item_obj->index_in_queue);
+
+        // print_item(item_obj);
+
+        ht_insert(ht, item_obj->id, item_obj);
+
+        q->current_items++;
+    }
+}
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char **argv)
@@ -267,6 +292,8 @@ int main(int argc, char **argv)
     initialize_queues_coordinates(locations_ptrs);
 
     ht = create_table(CAPACITY);
+
+    create_random_items(locations_ptrs);
 
     // setup_message_queue();
 
