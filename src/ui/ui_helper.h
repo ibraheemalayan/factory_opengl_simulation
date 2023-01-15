@@ -260,13 +260,12 @@ void draw_locations(LocationObject *locations[])
 
     for (int i = 1; i <= 22; i++)
     {
-        draw_rectangle(locations[i]->coords.x, locations[i]->coords.y, locations[i]->width, locations[i]->height, 220, 220, 220);
-        if (i == 3)
+        if (i >= TRUCK_1 && i <= TRUCK_3)
         {
-            R = 220;
-            G = 220;
-            B = 220;
+            draw_rectangle(locations[i]->coords.x + TRUCK_QUEUE_ROAD_X_OFFSET, locations[i]->coords.y + TRUCK_QUEUE_ROAD_Y_OFFSET, locations[i]->width, locations[i]->height, 220, 220, 220);
+            continue;
         }
+        draw_rectangle(locations[i]->coords.x, locations[i]->coords.y, locations[i]->width, locations[i]->height, 220, 220, 220);
     }
 }
 

@@ -64,9 +64,9 @@ void paint_and_swap_frame()
 
     draw_items_in_queues();
 
-    draw_truck(PARKED_TRUCK_X + truck_1_x_distance, PARKED_TRUCK_1_Y);
-    draw_truck(PARKED_TRUCK_X + truck_2_x_distance, PARKED_TRUCK_2_Y);
-    draw_truck(PARKED_TRUCK_X + truck_3_x_distance, PARKED_TRUCK_3_Y);
+    draw_truck(PARKED_TRUCK_X + truck_1_x_distance, PARKED_TRUCK_1_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
+    draw_truck(PARKED_TRUCK_X + truck_2_x_distance, PARKED_TRUCK_2_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
+    draw_truck(PARKED_TRUCK_X + truck_3_x_distance, PARKED_TRUCK_3_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
@@ -296,7 +296,7 @@ void create_random_items(LocationObject *locations[])
 
         LocationObject *q = locations[rand_queue_index];
 
-        ItemObj *item_obj = create_item_obj(i, i % 4, p_type, c_type, q);
+        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q);
 
         item_obj->destination_coords = get_queue_location_coords_for_index(q, item_obj->index_in_queue);
 
