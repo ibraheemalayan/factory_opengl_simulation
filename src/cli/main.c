@@ -439,7 +439,7 @@ void load_user_defined_values()
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
-            g_time_for_taking_a_particular_box_to_the_storage_area_as_absent_for_the_storage_employee = atoi(ptr);
+            g_time_for_taking_a_particular_box_to_the_STORAGE_AREAs_absent_for_the_storage_employee = atoi(ptr);
         }
         else if (lineNumber == 9)
         {
