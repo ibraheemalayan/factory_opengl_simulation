@@ -21,7 +21,7 @@ struct LocationObject
 
 typedef struct LocationObject LocationObject;
 
-struct ItemObj
+struct Item
 {
     int id;
     ItemType pkg_type;
@@ -33,9 +33,9 @@ struct ItemObj
     int index_in_queue;
     LocationObject *current_location;
 };
-typedef struct ItemObj ItemObj;
+typedef struct Item Item;
 
-void print_item(ItemObj *item)
+void print_item(Item *item)
 {
 
     printf("{ id: %d, pkg_type: %d, chocolate_type: %d, index: %d, q: %p, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",

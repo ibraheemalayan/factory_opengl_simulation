@@ -1,7 +1,7 @@
 #include "local.h"
 #ifndef __CLI_GLOBALS_H_
 //..................user-defined-Read from input file.................
-float g_time_for_taking_a_particular_box_to_the_STORAGE_AREAs_absent_for_the_storage_employee = 0;
+float g_time_for_taking_a_particular_box_to_the_storage_area_as_absent_for_the_storage_employee = 0;
 
 // Manufacturing lines must be suspended depends on
 int g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area = 0;
