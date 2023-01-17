@@ -8,13 +8,12 @@
 
 void reshape(int, int);
 void background();
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B);
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color);
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B);
 
-void draw_item(ItemObj *item);
+void draw_item(Item *item);
 void drawMetalDetector();
-void draw_text();
-void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
+void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
 
 /*
  * Function that handles the drawing of a circle using the triangle fan
@@ -25,7 +24,7 @@ void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
  *	y (GLFloat) - the y position of the center point of the circle
  *	radius (GLFloat) - the radius that the painted circle will have
  */
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
 {
     int i;
     int triangleAmount = 30; // # of triangles used to draw circle
@@ -34,7 +33,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
     GLfloat twicePi = 2.0f * M_PI;
 
     glBegin(GL_TRIANGLE_FAN);
-    glColor3ub(R, G, B);
+    glColor3ubv(color);
     glVertex2f(x, y); // center of circle
     for (i = 0; i <= triangleAmount; i++)
     {
@@ -45,7 +44,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B)
     glEnd();
 }
 
-void draw_item(ItemObj *item)
+void draw_item(Item *item)
 {
 
     GLubyte *color = NULL;
@@ -67,13 +66,12 @@ void draw_item(ItemObj *item)
     switch (item->pkg_type)
     {
     case PRODUCT:
-        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color[0], color[1], color[2]);
+        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color);
         break;
 
     case PATCH:
         glBegin(GL_TRIANGLES);
-        // glColor3ubv(color);
-        glColor3ub(color[0], color[1], color[2]);
+        glColor3ubv(color);
         glVertex2f(item->current_coords.x + 15, item->current_coords.y - 15);
         glVertex2f(item->current_coords.x - 15, item->current_coords.y - 15);
         glVertex2f(item->current_coords.x, item->current_coords.y + 15);
@@ -82,8 +80,6 @@ void draw_item(ItemObj *item)
 
     case CARTON_BOX:
         draw_rectangle(item->current_coords.x, item->current_coords.y, 30, 30, color[0], color[1], color[2]);
-        // draw_rectangle(item->current_coords.x, item->current_coords.y, 30, 30, 0, 0, 0);
-
         break;
     }
 }
@@ -103,15 +99,25 @@ void draw_walls()
 {
     int R = 100, G = 0, B = 100;
 
-    float wall_thickness = ROLLING_CROSS_SIZE / 10;
-    float wall_x = ROLLING_CROSSS_X - wall_thickness / 2;
+    float wall_thickness = ROLLING_GATE_SIZE / 10;
+    float wall_x = ROLLING_GATES_X - wall_thickness / 2;
 
-    // printer h-walls
-    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, 60, -200, wall_thickness, R, G, B);
-    draw_rectangle(PRINTER_ANIMATION_X_VALUE + 50, -65, -200, wall_thickness, R, G, B);
+    float gate_1_top = ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+    draw_rectangle(wall_x, gate_1_top, wall_thickness, 500 - gate_1_top, R, G, B);
+
+    float gate_2_bottom = -ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
+    draw_rectangle(wall_x, gate_2_bottom, wall_thickness, -500 + gate_1_top, R, G, B);
+
+    float gate_1_bottom_y = ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
+    float gate_2_top_y = -ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+
+    draw_rectangle(wall_x, gate_2_top_y, wall_thickness, gate_1_bottom_y - gate_2_top_y, R, G, B);
+
+    // middle wall
+    // draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
 
     // ****************************
-    // Printer Vertical Wall
+    // Metal Detector Wall
     // ****************************
 
     float wall_2_x = METAL_DETECTOR_X - wall_thickness / 2;
@@ -119,13 +125,13 @@ void draw_walls()
     float metal_detector_top = METAL_DETECTOR_SIZE / 2;
     float metal_detector_bottom = -METAL_DETECTOR_SIZE / 2;
 
-    draw_rectangle(wall_2_x, metal_detector_top, wall_thickness, metal_detector_top, R, G, B);
-    draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, metal_detector_bottom, R, G, B);
+    draw_rectangle(wall_2_x, metal_detector_top, wall_thickness, 500 + metal_detector_top, R, G, B);
+    draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, -500 + metal_detector_bottom, R, G, B);
 }
 
-void draw_printer_animation(GLfloat x, GLfloat y, float rotation)
+void draw_rolling_gate(GLfloat x, GLfloat y, float rotation)
 {
-    float height = ROLLING_CROSS_SIZE, width = ROLLING_CROSS_SIZE, thickness = ROLLING_CROSS_SIZE / 10;
+    float height = ROLLING_GATE_SIZE, width = ROLLING_GATE_SIZE, thickness = ROLLING_GATE_SIZE / 10;
 
     glPushMatrix();
 
@@ -186,97 +192,47 @@ void background()
     glClearColor(0.95, 0.95, 0.95, 1.0);
 }
 
-void draw_text()
+void draw_teller_text()
 {
-    char *string1 = "Manufacturing";
+    char *string1 = "Bx";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(MANUFACTURING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 13; i++)
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Bx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string1[i]);
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string1[i]);
     }
     glEnd();
 
-    char *string2 = "Patching";
+    char *string2 = "Ix";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(PATCHING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 8; i++)
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Ix_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string2[i]);
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string2[i]);
     }
     glEnd();
 
-    char *string6 = "Printing";
+    char *string3 = "Tx";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(PRINTING_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 8; i++)
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Tx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string6[i]);
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string3[i]);
     }
     glEnd();
 
-    char *string3 = "Containers";
+    char *string4 = "Rx";
 
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(CONTAINER_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 10; i++)
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Rx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string3[i]);
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string4[i]);
     }
     glEnd();
-
-    char *string4 = "Storage";
-
-    glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(STORAGE_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 7; i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string4[i]);
-    }
-    glEnd();
-
-    char *string5 = "Truck Parking";
-
-    glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(TRUCK_TITLE_TEXT_X, TITLE_TEXT_Y); // define position on the screen
-    for (size_t i = 0; i < 13; i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string5[i]);
-    }
-    glEnd();
-
-    // char *string2 = "Ix";
-
-    // glColor3f(0.0, 0.0, 0.0);
-    // glRasterPos2f(TELLER_TEXT_X, TELLER_Ix_Y_VALUE); // define position on the screen
-    // for (size_t i = 0; i < 2; i++)
-    // {
-    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string2[i]);
-    // }
-    // glEnd();
-
-    // char *string3 = "Tx";
-
-    // glColor3f(0.0, 0.0, 0.0);
-    // glRasterPos2f(TELLER_TEXT_X, TELLER_Tx_Y_VALUE); // define position on the screen
-    // for (size_t i = 0; i < 2; i++)
-    // {
-    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string3[i]);
-    // }
-    // glEnd();
-
-    // char *string4 = "Rx";
-
-    // glColor3f(0.0, 0.0, 0.0);
-    // glRasterPos2f(TELLER_TEXT_X, TELLER_Rx_Y_VALUE); // define position on the screen
-    // for (size_t i = 0; i < 2; i++)
-    // {
-    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string4[i]);
-    // }
-    // glEnd();
 }
 
 #endif

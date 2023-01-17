@@ -9,17 +9,18 @@
 #include "./constants.h"
 #include "./shapes.h"
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
 Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index);
 Coordinates get_queue_location_coords_for_next(LocationObject *queue);
 void initialize_queues_coordinates(LocationObject *locations[]);
-void update_item_location(ItemObj *item);
+void update_item_location(Item *item);
+void draw_items_in_queues();
 LocationObject *get_proper_location_pointer(Location current_location);
 void draw_locations(LocationObject *locations[]);
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
 {
-    ItemObj *item = (ItemObj *)malloc(sizeof(ItemObj));
+    Item *item = (Item *)malloc(sizeof(Item));
 
     item->id = id;
     item->index_in_queue = index;
@@ -27,11 +28,9 @@ ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType cho
     item->chocolate_type = chocolate_type;
     item->current_location = current_location;
 
-    // printf("Creating item with id: %d, index: %d, pkg_type: %d, chocolate_type: %d, location: %d", id, index, pkg_type, chocolate_type, current_location);
-
     // FIXME
-    item->current_coords.x = -1000 + id * 10;
-    item->current_coords.y = id * 20;
+    item->current_coords.x = -1500;
+    item->current_coords.y = 0;
 
     return item;
 }
@@ -80,72 +79,6 @@ void initialize_queues_coordinates(LocationObject *locations[])
     locations[MANUFACTURING_LINE_C2]->width = C_MANUFACTURING_LINE_WIDTH;
     locations[MANUFACTURING_LINE_C2]->height = MANUFACTURING_LINE_HEGHIT;
     locations[MANUFACTURING_LINE_C2]->current_items = 0;
-
-    locations[PATCHING_A]->coords.x = PATCHING_X_VALUE;
-    locations[PATCHING_A]->coords.y = A_PATCHING_Y_VALUE;
-    locations[PATCHING_A]->width = PATCHING_WIDTH;
-    locations[PATCHING_A]->height = PATCHING_HEIGHT;
-    locations[PATCHING_A]->current_items = 0;
-
-    locations[PATCHING_B]->coords.x = PATCHING_X_VALUE;
-    locations[PATCHING_B]->coords.y = B_PATCHING_Y_VALUE;
-    locations[PATCHING_B]->width = PATCHING_WIDTH;
-    locations[PATCHING_B]->height = PATCHING_HEIGHT;
-    locations[PATCHING_B]->current_items = 0;
-
-    locations[PATCHING_C]->coords.x = PATCHING_X_VALUE;
-    locations[PATCHING_C]->coords.y = C_PATCHING_Y_VALUE;
-    locations[PATCHING_C]->width = PATCHING_WIDTH;
-    locations[PATCHING_C]->height = PATCHING_HEIGHT;
-    locations[PATCHING_C]->current_items = 0;
-
-    locations[PRINTER]->coords.x = PRINTER_X_VALUE;
-    locations[PRINTER]->coords.y = PRINTER_Y_VALUE;
-    locations[PRINTER]->width = PRINTER_WIDTH;
-    locations[PRINTER]->height = PRINTER_HEIGHT;
-    locations[PRINTER]->current_items = 0;
-
-    locations[CONTAINER_A]->coords.x = CONTAINER_X_VALUE;
-    locations[CONTAINER_A]->coords.y = A_CONTAINER_Y_VALUE;
-    locations[CONTAINER_A]->width = CONTAINER_WIDTH;
-    locations[CONTAINER_A]->height = CONTAINER_HEIGHT;
-    locations[CONTAINER_A]->current_items = 0;
-
-    locations[CONTAINER_B]->coords.x = CONTAINER_X_VALUE;
-    locations[CONTAINER_B]->coords.y = B_CONTAINER_Y_VALUE;
-    locations[CONTAINER_B]->width = CONTAINER_WIDTH;
-    locations[CONTAINER_B]->height = CONTAINER_HEIGHT;
-    locations[CONTAINER_B]->current_items = 0;
-
-    locations[CONTAINER_C]->coords.x = CONTAINER_X_VALUE;
-    locations[CONTAINER_C]->coords.y = C_CONTAINER_Y_VALUE;
-    locations[CONTAINER_C]->width = CONTAINER_WIDTH;
-    locations[CONTAINER_C]->height = CONTAINER_HEIGHT;
-    locations[CONTAINER_C]->current_items = 0;
-
-    locations[STORAGE_AREA]->coords.x = STORAGE_X_VALUE;
-    locations[STORAGE_AREA]->coords.y = STORAGE_Y_VALUE;
-    locations[STORAGE_AREA]->width = STORAGE_WIDTH;
-    locations[STORAGE_AREA]->height = STORAGE_HEIGHT;
-    locations[STORAGE_AREA]->current_items = 0;
-
-    locations[TRUCK_1]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_1]->coords.y = TRUCK_1_PARKING_Y_VALUE;
-    locations[TRUCK_1]->width = TRUCK_PARKING_WIDTH;
-    locations[TRUCK_1]->height = TRUCK_PARKING_HEIGHT;
-    locations[TRUCK_1]->current_items = 0;
-
-    locations[TRUCK_2]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_2]->coords.y = TRUCK_2_PARKING_Y_VALUE;
-    locations[TRUCK_2]->width = TRUCK_PARKING_WIDTH;
-    locations[TRUCK_2]->height = TRUCK_PARKING_HEIGHT;
-    locations[TRUCK_2]->current_items = 0;
-
-    locations[TRUCK_3]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_3]->coords.y = TRUCK_3_PARKING_Y_VALUE;
-    locations[TRUCK_3]->width = TRUCK_PARKING_WIDTH;
-    locations[TRUCK_3]->height = TRUCK_PARKING_HEIGHT;
-    locations[TRUCK_3]->current_items = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(LocationObject *location)
@@ -168,7 +101,7 @@ Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index
     return coords;
 }
 
-void update_item_location(ItemObj *item)
+void update_item_location(Item *item)
 {
 
     // update X coordinates

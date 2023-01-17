@@ -1,6 +1,0 @@
-./test.sh: line 11: 102182 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102192 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102205 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102219 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102349 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102687 Segmentation fault      (core dumped) ./main
