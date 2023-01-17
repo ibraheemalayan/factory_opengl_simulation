@@ -1,5 +1,5 @@
 i=0
-gcc -g main.c -o main
+gcc -g -pthread main.c -o main
 while [ $i -lt $1 ]
 do
 	./main

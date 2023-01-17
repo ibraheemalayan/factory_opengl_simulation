@@ -179,17 +179,20 @@ int randomIntegerInRange(int lower, int upper)
     return (rand() % (upper - lower + 1)) + lower;
 }
 // returns empty index if found, else returns PILESIZE
-int array_full(chocolateProduct *arr[]){
+int array_full(chocolateProduct arr[]){
+    printf("called");
     for(int i = 0; i < PILESIZE; i++){
-        if (arr[i]->id == 0)
+        if (arr[i].id == 0)
             return i;
+        printf("id = %d\n",arr[i].id);
+            
     }
     return PILESIZE;
 }
 
-int find_product (chocolateProduct *arr[], int start){
+int find_product (chocolateProduct arr[], int start){
     for(int i = start; i < PILESIZE; i++){
-        if (arr[i]->id != 0)
+        if (arr[i].id != 0)
             return i;
     }
     return PILESIZE;
@@ -200,7 +203,8 @@ void generate_product(int empty_index, char type, int linenum){
     srand(time(NULL));
     ChocolateType type_num;
     int id;
-    unsigned char progress;
+    char progress[8] = "00000000";
+    
 
     switch(type){
         case 'a' : 
@@ -216,19 +220,18 @@ void generate_product(int empty_index, char type, int linenum){
 
     id_counter+=(rand()%100);
     id = id_counter;
-    progress = 0;
     if (type == 'a'){
-        type_A_pile[linenum][empty_index]->id = id;
-        type_A_pile[linenum][empty_index]->progress = progress;
-        type_A_pile[linenum][empty_index]->type = type_num;
+        type_A_pile[linenum][empty_index].id = id;
+        sprintf(type_A_pile[linenum][empty_index].progress, "%s",progress);
+        type_A_pile[linenum][empty_index].type = type_num;
     } else if (type == 'b'){
-        type_B_pile[linenum][empty_index]->id = id;
-        type_B_pile[linenum][empty_index]->progress = progress;
-        type_B_pile[linenum][empty_index]->type = type_num;
+        type_B_pile[linenum][empty_index].id = id;
+        sprintf(type_B_pile[linenum][empty_index].progress, "%s",progress);
+        type_B_pile[linenum][empty_index].type = type_num;
     } else if (type == 'c'){
-        type_C_pile[linenum][empty_index]->id = id;
-        type_C_pile[linenum][empty_index]->progress = progress;
-        type_C_pile[linenum][empty_index]->type = type_num;
+        type_C_pile[linenum][empty_index].id = id;
+        sprintf(type_C_pile[linenum][empty_index].progress, "%s",progress);
+        type_C_pile[linenum][empty_index].type = type_num;
     }else{
         perror("UNEXCPECTED: PRODUCT GENERATOR");
     }

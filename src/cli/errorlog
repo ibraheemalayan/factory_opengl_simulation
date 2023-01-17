@@ -1,6 +1,7 @@
-./test.sh: line 11: 102182 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102192 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102205 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102219 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102349 Segmentation fault      (core dumped) ./main
-./test.sh: line 11: 102687 Segmentation fault      (core dumped) ./main
+main.c: In function ‘employee_lineB’:
+main.c:363:69: warning: ‘sprintf’ writing a terminating nul past the end of the destination [-Wformat-overflow=]
+  363 |                         sprintf(type_B_pile[linenum][i].progress,"%s","00000000");
+      |                                                                     ^
+main.c:363:25: note: ‘sprintf’ output 9 bytes into a destination of size 8
+  363 |                         sprintf(type_B_pile[linenum][i].progress,"%s","00000000");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
