@@ -22,8 +22,7 @@ int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC = 0
 
 int g_time_to_end_simulation_in_minutes = 0;
 
-unsigned int id_counter = 100001;
-
+int id_counter = 1111;
 unsigned int patch_id_A = 200000;
 unsigned int patch_id_B = 300000;
 unsigned int patch_id_C = 400000;

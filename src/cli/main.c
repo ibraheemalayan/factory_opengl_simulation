@@ -6,6 +6,8 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+int count = 0;
+int start_flag = 0;
 
 
 // Arrays of threads
@@ -55,6 +57,7 @@ void printer_routine(void *argptr);
 
 int main()
 {
+
     //load_user_defined_values();
     
     create_and_setup_message_queues();
@@ -77,27 +80,46 @@ void initiate_mutexes(){
     int i,j;
     for (i = 0; i < 3; i++){
         for (j = 0; j < PILESIZE; j++){
-            pthread_mutex_init(&A_pile_mutex[i][j],NULL);
+            if (pthread_mutex_init(&A_pile_mutex[i][j],NULL) == -1){
+                perror("Pile A mutex : ");
+                exit(1);
+            }
         }
     }
 
     for (i = 0; i < 2; i++){
         for (j = 0; j < PILESIZE; j++){
-            pthread_mutex_init(&B_pile_mutex[i][j],NULL);
+            if (pthread_mutex_init(&B_pile_mutex[i][j],NULL) == -1){
+                perror("Pile B mutex : ");
+                exit(1);
+            }
         }
     }
 
     for (i = 0; i < 2; i++){
         for (j = 0; j < PILESIZE; j++){
-            pthread_mutex_init(&C_pile_mutex[i][j],NULL);
+            if (pthread_mutex_init(&C_pile_mutex[i][j],NULL)==-1){
+                perror("Pile C mutex : ");
+                exit(1);
+            }
         }
     }
 
-    pthread_mutex_init(&patch_mutex_A, NULL);
+    if (pthread_mutex_init(&patch_mutex_A, NULL) == -1 ){
+        perror("patcher A mutex :");
+        exit(1);
+    }
 
-    pthread_mutex_init(&patch_mutex_B, NULL);
+    if (pthread_mutex_init(&patch_mutex_B, NULL) == -1){
+        perror("patcher B mutex :");
+        exit(1);
+    }
 
-    pthread_mutex_init(&patch_mutex_C, NULL);
+    if (pthread_mutex_init(&patch_mutex_C, NULL) == -1){
+        perror("patcher C mutex :");
+        exit(1);
+    }
+
 }
 
 void start_simulation()
@@ -108,6 +130,7 @@ void start_simulation()
     create_employees_threads_type_C();
     create_patcher_employees();
     create_printer_machine();
+    start_flag = 1;
 }
 
 void create_generator_thread(){
@@ -127,11 +150,11 @@ void create_employees_threads_type_A()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position[j]) == -1){
+            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position[j][i]) == -1){
                 perror("Employee A, thread creation : ");
                 exit(1);
             }
-            usleep(10000);
+            usleep(50000);
         }
     }
 }
@@ -150,7 +173,7 @@ void create_employees_threads_type_B()
                 perror("Employee B, thread creation : ");
                 exit(1);
             }
-            usleep(10000);
+            usleep(50000);
         }
     }
 }
@@ -169,7 +192,7 @@ void create_employees_threads_type_C()
                 perror("Employee C, thread creation : ");
                 exit(1);
             }
-            usleep(10000);
+            usleep(50000);
         }
     }
 }
@@ -178,7 +201,7 @@ void create_patcher_employees(){
 
     for (int i =0; i<2; i ++){
         if (pthread_create(&patcher_employees[i], NULL, (void *)patcher_routine, NULL) == -1){
-            //perror("Patcher Employee , thread creation : ");
+            perror("Patcher Employee , thread creation : ");
             exit(1);
         }
         usleep(50000);
@@ -187,7 +210,7 @@ void create_patcher_employees(){
 
 void create_printer_machine(){
     if (pthread_create(&printer, NULL, (void *)printer_routine, NULL) == -1){
-            //perror("Patcher Employee , thread creation : ");
+            perror("Patcher Employee , thread creation : ");
             exit(1);
         }
     usleep(50000);
@@ -195,6 +218,7 @@ void create_printer_machine(){
 
 
 void generator_routine(void *argptr){
+    while(start_flag ==  0);
     int empty_index, j,i;
 
     //initialize piles
@@ -214,35 +238,56 @@ void generator_routine(void *argptr){
         }
     }
 
-    for(i = 0; i < 100; i++){ //temporary because of lack of termination condition
+    for(i = 0; i < 100; i){ //temporary because of lack of termination condition
 
         for (j =0 ; j < C_MANUFACTURING_LINES_TYPEA; j++){
             for (int k = 0; k <= PILESIZE; k++){
-                pthread_mutex_lock(&A_pile_mutex[j][k]);
+                if(pthread_mutex_lock(&A_pile_mutex[j][k]) == -1){
+                    perror("mutex lock pile A :");
+                    exit(1);
+                }
                 if (type_A_pile[j][k].id == 0){
                     generate_product(k,'a',j);
                 }
-                pthread_mutex_unlock(&A_pile_mutex[j][k]);
+                if(pthread_mutex_unlock(&A_pile_mutex[j][k]) == -1){
+                    perror("mutex unlock pile A :");
+                    exit(1);
+                }
             }
         }
-        
         for (j =0 ; j < C_MANUFACTURING_LINES_TYPEB; j++){
             for (int k = 0; k <= PILESIZE; k++){
-                pthread_mutex_lock(&B_pile_mutex[j][k]);
+                if (pthread_mutex_lock(&B_pile_mutex[j][k]) == -1){
+                    perror("mutex lock pile B :");
+                    exit(1);
+                }
                 if (type_B_pile[j][k].id == 0){
                     generate_product(k,'b',j);
+                    count ++;
                 }
-                pthread_mutex_unlock(&B_pile_mutex[j][k]);
+                if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1){
+                    perror("mutex unlock pile B :");
+                    exit(1);
+                }
             }
         }
+        // printf("exited\n");
+        if (count > 50)
+            break;
 
         for (j =0 ; j < C_MANUFACTURING_LINES_TYPEC; j++){
             for (int k = 0; k <= PILESIZE; k++){
-                pthread_mutex_lock(&C_pile_mutex[j][k]);
+                if (pthread_mutex_lock(&C_pile_mutex[j][k]) == -1){
+                    perror("mutex lock pile C :");
+                    exit(1);
+                }
                 if (type_C_pile[j][k].id == 0){
                     generate_product(k,'c',j);
                 }
-                pthread_mutex_unlock(&C_pile_mutex[j][k]);
+                if (pthread_mutex_unlock(&C_pile_mutex[j][k]) == -1){
+                    perror("mutex unlock pile C :");
+                    exit(1);
+                }
             }
         }
 
@@ -251,83 +296,81 @@ void generator_routine(void *argptr){
 }
 
 void employee_lineA(void * position){
-    // employee_information *temp  = (employee_information *) position;
-    // int linenum = temp->linenum;
-    // int index = temp->index;
-    // message_buf buf;
-    // buf.mtype=1;
-    // buf.payload.chocolate_type=TYPE_A;
-    // buf.payload.msg_type = 1;
-    // buf.payload.item_type = PRODUCT;
-    // if (index > 7 || linenum > 2){
-    //     perror("error with passing argument");
-    //     clean_up();
-    //     exit(1);
-    // }
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+    int f = 0;
+    message_buf buf;
+    buf.mtype=1;
+    buf.payload.chocolate_type=TYPE_A;
+    buf.payload.msg_type = 1;
+    buf.payload.item_type = PRODUCT;
+    while(start_flag ==  0);
+    if (index > 7 || linenum > 2){
+        perror("error with passing argument");
+        clean_up();
+        exit(1);
+    }
+    // printf("index : %d, linenum : %d\n", index, linenum);
     
-    // switch (linenum){
-    //     case 0 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A1;
-    //         break;
-    //     case 1 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A2;
-    //         break;
-    //     case 2 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_A3;
-    //         break;
-    // }
-    // buf.payload.index = index;
+    switch (linenum){
+        case 0 :
+            buf.payload.current_location = MANUFACTURING_LINE_A1;
+            break;
+        case 1 :
+            buf.payload.current_location = MANUFACTURING_LINE_A2;
+            break;
+    }
+    buf.payload.index = index;
 
-    // int i = 0, j = 0;
-    // srand(g_Array_of_Threads_TypeA[linenum][index]);
-    // int step_time = (C_MIN_A + rand()) % C_MAX_A;
-    // while(1){
-    //     i =find_product(type_A_pile[linenum], i);
-    //     if (i != PILESIZE)
-    //     {
-    //         if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){
-    //             if (1){    
-    //                 buf.payload.id = type_A_pile[linenum][i].id;
-    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-    //                     perror("Line A UI Message Queue");
-    //                 type_A_pile[linenum][i].progress[index] = '1';
-    //                 printf("index : %d progress : %s\n", index, type_A_pile[linenum][i].progress);
-    //                 usleep(step_time);
-    //                 if (strcmp(type_A_pile[linenum][i].progress,"11111111") == 0 ){
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-    //                          perror("Line A Patcher Message Queue");
-    //                     // printf("A id = %d; ready\n", type_A_pile[linenum][i].id);
-    //                     type_A_pile[linenum][i].id = 0;
-    //                     type_A_pile[linenum][i].type = TYPE_B;
-    //                     sprintf(type_A_pile[linenum][i].progress,"%s","00000000");
-    //                 }
-    //             }
-    //             pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
-    //         }
-    //     }
-    //     i = (i+1)%PILESIZE;
-    //     j++;
-    //     if (j == 2000000)
-    //         break;
-
-    // }
+    int i = 0, j = 0;
+    srand(g_Array_of_Threads_TypeA[linenum][index]);
+    int step_time = (C_MIN_A + rand()) % C_MAX_A;
+    while(1){
+        
+        i = find_product(type_A_pile[linenum], i);
+        if (i != PILESIZE)
+        {
+            if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){
+                if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1' ))){
+                    type_A_pile[linenum][i].progress[index] = '1';
+                    usleep(step_time);
+                    if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0){
+                        buf.payload.id = type_A_pile[linenum][i].id;
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
+                        type_A_pile[linenum][i].id = 0;
+                        f++;
+                    }
+                }
+                pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+            }
+        }
+        i = (i+1)%PILESIZE;
+        j++;
+        if (count >= 50){
+            break;
+        }
+    }
+    if ( f != 0)
+        printf("A %d: %d items passed through this line\n",index, f);
 }
 
 void employee_lineB(void * position){
     employee_information *temp  = (employee_information *) position;
     int linenum = temp->linenum;
     int index = temp->index;
+    int f = 0;
     message_buf buf;
     buf.mtype=1;
     buf.payload.chocolate_type=TYPE_B;
     buf.payload.msg_type = 1;
     buf.payload.item_type = PRODUCT;
+    while(start_flag ==  0);
     if (index > 5 || linenum > 1){
         perror("error with passing argument");
         clean_up();
         exit(1);
     }
-    printf("index : %d, linenum : %d\n", index, linenum);
     
     switch (linenum){
         case 0 :
@@ -344,24 +387,18 @@ void employee_lineB(void * position){
     int step_time = (C_MIN_B + rand()) % C_MAX_B;
     while(1){
         
-        i =find_product(type_B_pile[linenum], i);
+        i = find_product(type_B_pile[linenum], i);
         if (i != PILESIZE)
         {
-        if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0){
-            if (type_B_pile[linenum][index].progress[index] == '0' &&( type_B_pile[linenum][index].progress[index-1] == '1' || index == 0)){    
-                    buf.payload.id = type_B_pile[linenum][i].id;
-                    if (msgsnd(ui_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-                        perror("Line B UI Message Queue");
+            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0){
+                if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1')){
                     type_B_pile[linenum][i].progress[index] = '1';
                     usleep(step_time);
-                    printf("%s\t%c\n", type_B_pile[linenum][i].progress, type_A_pile[linenum][i].progress[4]);
-                    if (strcmp(type_B_pile[linenum][i].progress,"11111100") == 0 ){
-                        if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-                             perror("Line B Patcher Message Queue");
+                    if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0){
+                        buf.payload.id = type_B_pile[linenum][i].id;
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
                         type_B_pile[linenum][i].id = 0;
-                        type_B_pile[linenum][i].type = TYPE_B;
-                        sprintf(type_B_pile[linenum][i].progress,"%s","00000000");
-
+                        f++;
                     }
                 }
                 pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
@@ -369,170 +406,170 @@ void employee_lineB(void * position){
         }
         i = (i+1)%PILESIZE;
         j++;
-        if (j == 300000000)
+        if (count >= 50){
             break;
-
+        }
     }
+    if ( f != 0)
+        printf("B %d: %d items passed through this line\n",index, f);
 }
 
 void employee_lineC(void * position){
-    // employee_information *temp  = (employee_information *) position;
-    // int linenum = temp->linenum;
-    // int index = temp->index;
-    // message_buf buf;
-    // buf.mtype=1;
-    // buf.payload.chocolate_type=TYPE_C;
-    // buf.payload.msg_type = 1;
-    // buf.payload.item_type = PRODUCT;
-    // if (index > 4 || linenum > 1){
-    //     perror("error with passing argument");
-    //     clean_up();
-    //     exit(1);
-    // }
+    employee_information *temp  = (employee_information *) position;
+    int linenum = temp->linenum;
+    int index = temp->index;
+    int f = 0;
+    message_buf buf;
+    buf.mtype=1;
+    buf.payload.chocolate_type=TYPE_C;
+    buf.payload.msg_type = 1;
+    buf.payload.item_type = PRODUCT;
+    while(start_flag ==  0);
+    if (index > 5 || linenum > 1){
+        perror("error with passing argument");
+        clean_up();
+        exit(1);
+    }
     
-    // switch (linenum){
-    //     case 0 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_C1;
-    //         break;
-    //     case 1 :
-    //         buf.payload.current_location = MANUFACTURING_LINE_C2;
-    //         break;
-    // }
-    // buf.payload.index = index;
+    switch (linenum){
+        case 0 :
+            buf.payload.current_location = MANUFACTURING_LINE_C1;
+            break;
+        case 1 :
+            buf.payload.current_location = MANUFACTURING_LINE_C2;
+            break;
+    }
+    buf.payload.index = index;
 
-    // int i = 0, j = 0;
-    // srand(g_Array_of_Threads_TypeC[linenum][index]);
-    // int step_time = (C_MIN_C + rand()) % C_MAX_C;
-    // while(1){
-    //     i =find_product(type_C_pile[linenum], i);
-    //     if (i != PILESIZE)
-    //     {
-    //         if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
-    //             if (((type_C_pile[linenum][i].progress[index] == '0') &&((type_C_pile[linenum][i].progress[index-1] == '1') || ((index == 0 ) || ((index > 3) && (type_C_pile[linenum][i].progress[0] == '1'))) ))){    
-    //                 buf.payload.id = type_C_pile[linenum][i].id;
-    //                 if (msgsnd(ui_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-    //                     perror("Line C UI Message Queue");
-    //                 type_C_pile[linenum][i].progress[index] = '1';
-    //                 usleep(step_time);
-    //                 if (strcmp(type_C_pile[linenum][i].progress,"11111000") == 0 ){
-    //                     if (msgsnd(patcher_msgq_id, &buf, sizeof(buf), IPC_NOWAIT) == -1)
-    //                          perror("Line C Patcher Message Queue");
-    //                     // printf("C id = %d; ready\n", type_C_pile[linenum][i].id);
-    //                     type_C_pile[linenum][i].id = 0;
-    //                     type_C_pile[linenum][i].type = TYPE_C;
-    //                     sprintf(type_C_pile[linenum][i].progress,"%s","00000000");
-                        
-    //                 }
-    //             }
-    //             pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
-    //         }
-    //     }
-    //     i = (i+1)%PILESIZE;
-    //     j++;
-    //     if (j == 2000000)
-    //         break;
-
-    // }
+    int i = 0, j = 0;
+    srand(g_Array_of_Threads_TypeC[linenum][index]);
+    int step_time = (C_MIN_C + rand()) % C_MAX_C;
+    while(1){
+        
+        i = find_product(type_C_pile[linenum], i);
+        if (i != PILESIZE)
+        {
+            if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
+                if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1' ))){
+                    type_C_pile[linenum][i].progress[index] = '1';
+                    usleep(step_time);
+                    if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0){
+                        buf.payload.id = type_C_pile[linenum][i].id;
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
+                        type_C_pile[linenum][i].id = 0;
+                        f++;
+                    }
+                }
+                pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+            }
+        }
+        i = (i+1)%PILESIZE;
+        j++;
+        if (count >= 50){
+            break;
+        }
+    }
+    if ( f != 0)
+        printf("C %d: %d items passed through this line\n",index, f);
 }
 
 void patcher_routine(void *argptr){
-    // int j = 0;
-    // message_buf buf;
-    // message_buf send;
-    // send.mtype = 1;
-    // send.payload.item_type = PATCH;
-    // while(1){
-    //     if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
-    //         printf("no message received\n");
-    //     }else{
-    //         printf("message received");
-    //         printf("\t%d %d\t", buf.payload.id, buf.payload.chocolate_type);
-    //         buf.mtype = 1;
-    //         switch (buf.payload.chocolate_type){
-    //             case TYPE_A:
-    //                 buf.payload.current_location=PATCHING_A;
-    //                 break;
-    //             case TYPE_B:
-    //                 buf.payload.current_location=PATCHING_B;
-    //                 break;
-    //             case TYPE_C:
-    //                 buf.payload.current_location=PATCHING_C;
-    //                 break;
-    //         }
-    //         send.payload.current_location=buf.payload.current_location;
-    //         msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+    while(start_flag ==  0);
+    int j = 0;
+    message_buf buf;
+    message_buf send;
+    send.mtype = 1;
+    send.payload.item_type = PATCH;
+    while(1){
+        if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
+        }else{
+            buf.mtype = 1;
+            switch (buf.payload.chocolate_type){
+                case TYPE_A:
+                    buf.payload.current_location=PATCHING_A;
+                    break;
+                case TYPE_B:
+                    buf.payload.current_location=PATCHING_B;
+                    break;
+                case TYPE_C:
+                    buf.payload.current_location=PATCHING_C;
+                    break;
+            }
+            send.payload.current_location=buf.payload.current_location;
+            msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
 
-    //         if (buf.payload.chocolate_type == TYPE_A){
-    //             pthread_mutex_lock(&patch_mutex_A);
-    //             type_A_patch++;
-    //             if (type_A_patch == 10){
-    //                 type_A_patch = 0;
-    //                 send.payload.chocolate_type = TYPE_A;
-    //                 buf.payload.item_type=PATCH;
-    //                 buf.payload.id = patch_id_A;
-    //                 patch_id_A += 10;
-    //                 msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-    //                 msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-    //             }
-    //             usleep(PATCHER_TIME);
-    //             pthread_mutex_unlock(&patch_mutex_A);
-    //         }else if (buf.payload.chocolate_type == TYPE_B){
-    //             pthread_mutex_lock(&patch_mutex_B);
-    //             type_B_patch++;
-    //             if (type_B_patch == 10){
-    //                 type_B_patch = 0;
-    //                 send.payload.chocolate_type = TYPE_B;
-    //                 buf.payload.item_type=PATCH;
-    //                 buf.payload.id = patch_id_B;
-    //                 patch_id_B += 10;
-    //                 msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-    //                 msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-    //             }
-    //             usleep(PATCHER_TIME);
-    //             pthread_mutex_unlock(&patch_mutex_B);
-    //         }else if (buf.payload.chocolate_type == TYPE_C){
-    //             pthread_mutex_lock(&patch_mutex_C);
-    //             type_C_patch++;
-    //             if (type_C_patch == 10){
-    //                 type_C_patch = 0;
-    //                 send.payload.chocolate_type = TYPE_C;
-    //                 buf.payload.item_type=PATCH;
-    //                 buf.payload.id = patch_id_C;
-    //                 patch_id_C += 10;
-    //                 msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-    //                 msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-    //             }
-    //             usleep(PATCHER_TIME);
-    //             pthread_mutex_unlock(&patch_mutex_C);
-    //         }
+            if (buf.payload.chocolate_type == TYPE_A){
+                pthread_mutex_lock(&patch_mutex_A);
+                type_A_patch++;
+                if (type_A_patch == 10){
+                    type_A_patch = 0;
+                    send.payload.chocolate_type = TYPE_A;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_A;
+                    patch_id_A += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_A);
+            }else if (buf.payload.chocolate_type == TYPE_B){
+                pthread_mutex_lock(&patch_mutex_B);
+                type_B_patch++;
+                if (type_B_patch == 10){
+                    type_B_patch = 0;
+                    send.payload.chocolate_type = TYPE_B;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_B;
+                    patch_id_B += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_B);
+            }else if (buf.payload.chocolate_type == TYPE_C){
+                pthread_mutex_lock(&patch_mutex_C);
+                type_C_patch++;
+                if (type_C_patch == 10){
+                    type_C_patch = 0;
+                    send.payload.chocolate_type = TYPE_C;
+                    buf.payload.item_type=PATCH;
+                    buf.payload.id = patch_id_C;
+                    patch_id_C += 10;
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+                }
+                usleep(PATCHER_TIME);
+                pthread_mutex_unlock(&patch_mutex_C);
+            }
 
-    //     }
-    //     j++;
-    //     printf("%d\n",j);
-    //     if (j == 1000)//termination condition
-    //         break;
-    // }
-    // pthread_exit(0);
+        }
+        j++;
+        if (j == 1000)//termination condition
+            break;
+    }
+    pthread_exit(0);
 }
 
 void printer_routine(void *argptr){
-    // int j = 0;
-    // message_buf buf;
-    // while(1){
-    //     if(msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1){
-    //     }else{
-    //         buf.payload.current_location = PRINTER;
-    //         msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-    //         for (int i = 0; i < 10; i ++){
-    //             //print date on patche node
-    //             usleep(PRINTER_TIME);
-    //         }
-    //         // append to patche queue
-    //     }
-    //     j++;
-    //     if (j==1000) // termination condition needed
-    //         break;
-    // }
+    while(start_flag ==  0);
+    int j = 0;
+    message_buf buf;
+    while(1){
+        if(msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1){
+        }else{
+            printf("printer received msg\n");
+            buf.payload.current_location = PRINTER;
+            msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+            for (int i = 0; i < 10; i ++){
+                //print date on patche node
+                usleep(PRINTER_TIME);
+            }
+            // append to patche queue
+        }
+        j++;
+        if (j==1000) // termination condition needed
+            break;
+    }
 
 }
 

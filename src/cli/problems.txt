@@ -1,0 +1,2 @@
+1- unique ID not generation, the array pile will not take in the new counter ID.
+2- printer only reads value in next run, does not read in the same run.

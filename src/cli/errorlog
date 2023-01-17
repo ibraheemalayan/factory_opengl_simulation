@@ -1,7 +1,0 @@
-main.c: In function ‘employee_lineB’:
-main.c:363:69: warning: ‘sprintf’ writing a terminating nul past the end of the destination [-Wformat-overflow=]
-  363 |                         sprintf(type_B_pile[linenum][i].progress,"%s","00000000");
-      |                                                                     ^
-main.c:363:25: note: ‘sprintf’ output 9 bytes into a destination of size 8
-  363 |                         sprintf(type_B_pile[linenum][i].progress,"%s","00000000");
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

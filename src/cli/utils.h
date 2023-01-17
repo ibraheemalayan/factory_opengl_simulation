@@ -218,18 +218,19 @@ void generate_product(int empty_index, char type, int linenum){
             break;
     }
 
-    id_counter+=(rand()%100);
+    id_counter+=(5 + rand()%100);
+    // printf("%d\t%d new\n", linenum,empty_index);
     id = id_counter;
     if (type == 'a'){
-        type_A_pile[linenum][empty_index].id = id;
+        type_A_pile[linenum][empty_index].id = id_counter;
         sprintf(type_A_pile[linenum][empty_index].progress, "%s",progress);
         type_A_pile[linenum][empty_index].type = type_num;
     } else if (type == 'b'){
-        type_B_pile[linenum][empty_index].id = id;
+        type_B_pile[linenum][empty_index].id = id_counter;
         sprintf(type_B_pile[linenum][empty_index].progress, "%s",progress);
         type_B_pile[linenum][empty_index].type = type_num;
     } else if (type == 'c'){
-        type_C_pile[linenum][empty_index].id = id;
+        type_C_pile[linenum][empty_index].id = id_counter;
         sprintf(type_C_pile[linenum][empty_index].progress, "%s",progress);
         type_C_pile[linenum][empty_index].type = type_num;
     }else{
