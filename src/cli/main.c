@@ -150,13 +150,13 @@ int G_numberOfChocolateBoxs_Truck_A = 0;
 int G_numberOfChocolateBoxs_Truck_B = 0;
 int G_numberOfChocolateBoxs_Truck_C = 0;
 
-//Conditions on Trucks
-int G_isTruck1Available =0; //0:1
-int G_isTruck2Available =0; //0:1
-int G_isTruck3Available =0; //0:1
-
-
+//Trucks
 int G_Trucks_Order = 1; // 1:2:3
+
+int G_numberOfChocolateBoxsIn_Truck1=0;
+int G_numberOfChocolateBoxsIn_Truck2=0;
+int G_numberOfChocolateBoxsIn_Truck3=0;
+
 
 
 
@@ -166,12 +166,7 @@ struct Object dequeueNodeFromQueueNoInternalMutex( struct chocolateNode **FrontQ
 struct Object dequeueNodeFromQueueWithInternalMutex(pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, int *numberOfchocolateItemInQueueTypeT);
 void enqueueToQueue(struct Object chocolateInfo, pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, struct chocolateNode **RearQueue, int *numberOfchocolateItemInQueueTypeT);
 
-void createThreadsForEmpsWorkfromPrinterToContainers();
-void createThreadsForEmpsWorkfromContainersToFillingTheCartonBoxes();
-void createThreadsForTwoEmpsWorkfromFillingTheCartonBoxesToStorageArea();
-void createThreadsForTwoEmpsWorkfromStorageAreaToTruks();
-void creatrThreadForPrint();
-
+void createThreads();
 void insertToContainers();
 void fillingTheCartonBoxesA();
 void fillingTheCartonBoxesB();
@@ -193,7 +188,7 @@ void displyStorageAreaQueueA();
 void displyStorageAreaQueueB();
 void displyStorageAreaQueueC();
 void displyPrintingQueue();
-void testPrintingQueue();
+void testEnqueueToPrintingQueue();
 void test_simulation();
 
 // .................................end new........................................ 
@@ -1208,7 +1203,7 @@ void displyTheFillingCartonBoxesQueueC(){
 }
 
 
-void testPrintingQueue(){
+void testEnqueueToPrintingQueue(){
         struct Object ch1;
         ch1.chocolate_type=TYPE_A;
         ch1.current_location=PRINTER;
@@ -1251,7 +1246,21 @@ void testPrintingQueue(){
         ch6.index_in_queue=0;
         ch6.id=6;
         enqueueToQueue(ch6,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
-        
+        /*struct Object ch7;
+        ch7.chocolate_type=TYPE_C;
+        ch7.current_location=PRINTER;
+        ch7.pkg_type=PATCH;
+        ch7.index_in_queue=0;
+        ch7.id=5;
+        enqueueToQueue(ch7,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+        struct Object ch8;
+        ch8.chocolate_type=TYPE_C;
+        ch8.current_location=PRINTER;
+        ch8.pkg_type=PATCH;
+        ch8.index_in_queue=0;
+        ch8.id=6;
+        enqueueToQueue(ch8,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+        */
 }
 
 void insertToContainers(){
@@ -1280,67 +1289,11 @@ void insertToContainers(){
     
 }
 
-void createThreadsForEmpsWorkfromPrinterToContainers(){
-    /* create a new 3 threads that will keep move chocolate from Printer Queue To Containers Queues */
-    pthread_t p_thread1;
-    pthread_create(&p_thread1, NULL, (void *)insertToContainers, NULL);
-    pthread_t p_thread2;
-    pthread_create(&p_thread2, NULL, (void *)insertToContainers, NULL);
-    pthread_t p_thread3;
-    pthread_create(&p_thread3, NULL, (void *)insertToContainers, NULL);
-    //pthread_join(p_thread1, NULL);  
-    //pthread_join(p_thread2, NULL);
-    //pthread_join(p_thread3, NULL); 
-}
-
-void createThreadsForEmpsWorkfromContainersToFillingTheCartonBoxes(){
-    // create a new 3 threads that will keep move chocolate from Containers Queues To filling  Carton Boxes Queues 
-    pthread_t p_thread4;
-    pthread_create(&p_thread4, NULL, (void *)fillingTheCartonBoxesA, NULL);
-    pthread_t p_thread5;
-    pthread_create(&p_thread5, NULL, (void *)fillingTheCartonBoxesB, NULL);
-    pthread_t p_thread6;
-    pthread_create(&p_thread6, NULL, (void *)fillingTheCartonBoxesC, NULL);
-    //pthread_join(p_thread4, NULL);  
-    //pthread_join(p_thread5, NULL);
-    //pthread_join(p_thread6, NULL);  
-  
-       
-}
-
-void createThreadsForTwoEmpsWorkfromFillingTheCartonBoxesToStorageArea(){
-    // create a new 2 threads that will keep move chocolate from filling  Carton Boxes Queues To Storage Area Queues 
-    pthread_t p_thread7;
-    pthread_create(&p_thread7, NULL, (void *)insertToStorageArea, NULL);
-    pthread_t p_thread8;
-    pthread_create(&p_thread8, NULL, (void *)insertToStorageArea, NULL);
-    //pthread_join(p_thread7, NULL);  
-    //pthread_join(p_thread8, NULL);  
-}
-
-void createThreadsForTwoEmpsWorkfromStorageAreaToTruks(){
-    // create a new 2 threads that will keep move chocolate from Storage Area Queues To trucks 
-    pthread_t p_thread9;
-    pthread_create(&p_thread9, NULL, (void *)insertToTrucks, NULL);
-    pthread_t p_thread10;
-    pthread_create(&p_thread10, NULL, (void *)insertToTrucks, NULL);
-    //pthread_join(p_thread9, NULL);  
-    //pthread_join(p_thread10, NULL);  
-
-}
-void creatrThreadForPrint(){
-    pthread_t p_thread11;
-    pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
-    //pthread_join(p_thread11, NULL);  
-
-    
-}
-
 void printInfo(){
 
     while (1)
     {
-    /*
+    
     displyPrintingQueue();
     displyContainerQueueA();
     displyContainerQueueB();
@@ -1348,14 +1301,14 @@ void printInfo(){
     displyTheFillingCartonBoxesQueueA();
     displyTheFillingCartonBoxesQueueB();
     displyTheFillingCartonBoxesQueueC();
-    */
     displyStorageAreaQueueA();
     displyStorageAreaQueueB();
     displyStorageAreaQueueC();
-    sleep(5);        
+    sleep(1);        
     }
 }
 
+int ronud =0;
 void insertToTrucks(){
 
 struct Object chocolate;
@@ -1366,29 +1319,58 @@ while(1){
     {  
         pthread_mutex_lock(&G_mutexs_on_Trucks_Queues[G_Trucks_Order-1]);
         save_index_mutex=G_Trucks_Order-1;
-        //printf("G_numberOfChocolateBoxs_Truck_A:%d\n\n",G_numberOfChocolateBoxs_Truck_A);
-        //printf("g_number_of_carton_boxs_truck_can_hold_from_typeA:%d\n\n",g_number_of_carton_boxs_truck_can_hold_from_typeA);
         if(G_numberOfChocolateBoxs_Truck_A < g_number_of_carton_boxs_truck_can_hold_from_typeA){
-            //printf("G_numberOfChocolateBoxsInStorageAreaTypeA:%d\n\n",G_numberOfChocolateBoxsInStorageAreaTypeA);
             if(G_numberOfChocolateBoxsInStorageAreaTypeA > 0){
-                //printf("G_numberOfChocolateBoxsInStorageAreaTypeA:%d\n\n",G_numberOfChocolateBoxsInStorageAreaTypeA);
                 chocolate=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[0],&FrontStoragAreaTypeAQueue,&G_numberOfChocolateBoxsInStorageAreaTypeA);
+                pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                if(save_index_mutex == 0){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue1, &RearTruckQueue1,&G_numberOfChocolateBoxsIn_Truck1);
+
+                }else if (save_index_mutex == 1)
+                {
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue2, &RearTruckQueue2,&G_numberOfChocolateBoxsIn_Truck2);
+                }else if(save_index_mutex == 2){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue3, &RearTruckQueue3,&G_numberOfChocolateBoxsIn_Truck3);
+                }
+                
                 G_numberOfChocolateBoxs_Truck_A++;
-                //printf("G_numberOfChocolateBoxs_Truck_A:%d\n\n",G_numberOfChocolateBoxs_Truck_A);
+                printf("\n\nG_numberOfChocolateBoxs_Truck_A:%d   Truck :%d           ronud:%d\n\n",G_numberOfChocolateBoxs_Truck_A, save_index_mutex+1,ronud);
                 break;
             }
         } 
         if(G_numberOfChocolateBoxs_Truck_B < g_number_of_carton_boxs_truck_can_hold_from_typeB){
             if(G_numberOfChocolateBoxsInStorageAreaTypeB > 0){
                 chocolate=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[1],&FrontStoragAreaTypeBQueue,&G_numberOfChocolateBoxsInStorageAreaTypeB);
+                pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                if(save_index_mutex == 0){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue1, &RearTruckQueue1,&G_numberOfChocolateBoxsIn_Truck1);
+
+                }else if (save_index_mutex == 1)
+                {
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue2, &RearTruckQueue2,&G_numberOfChocolateBoxsIn_Truck2);
+                }else if(save_index_mutex == 2){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue3, &RearTruckQueue3,&G_numberOfChocolateBoxsIn_Truck3);
+                }
                 G_numberOfChocolateBoxs_Truck_B++;
+                printf("\n\nG_numberOfChocolateBoxs_Truck_B:%d   Truck :%d           ronud:%d\n\n",G_numberOfChocolateBoxs_Truck_B, save_index_mutex+1,ronud);
                 break;
             }    
         }
         if(G_numberOfChocolateBoxs_Truck_C < g_number_of_carton_boxs_truck_can_hold_from_typeC){
             if(G_numberOfChocolateBoxsInStorageAreaTypeC > 0){
                 chocolate=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[2],&FrontStoragAreaTypeCQueue,&G_numberOfChocolateBoxsInStorageAreaTypeC);
+                pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                if(save_index_mutex == 0){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue1, &RearTruckQueue1,&G_numberOfChocolateBoxsIn_Truck1);
+
+                }else if (save_index_mutex == 1)
+                {
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue2, &RearTruckQueue2,&G_numberOfChocolateBoxsIn_Truck2);
+                }else if(save_index_mutex == 2){
+                    enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex],&FrontTruckQueue3, &RearTruckQueue3,&G_numberOfChocolateBoxsIn_Truck3);
+                }
                 G_numberOfChocolateBoxs_Truck_C++;
+                printf("\n\nG_numberOfChocolateBoxs_Truck_C:%d   Truck :%d           ronud:%d\n\n",G_numberOfChocolateBoxs_Truck_C, save_index_mutex+1,ronud);
                 break;
             }    
         }
@@ -1398,8 +1380,10 @@ while(1){
                 G_Trucks_Order = 2;
             else if(G_Trucks_Order == 2 )
                 G_Trucks_Order = 3;
-            else if(G_Trucks_Order == 3 )
-                G_Trucks_Order = 1;   
+            else if(G_Trucks_Order == 3 ){
+                G_Trucks_Order = 1; 
+                ronud++; 
+            }
 
             G_numberOfChocolateBoxs_Truck_A=0;
             G_numberOfChocolateBoxs_Truck_B=0;
@@ -1508,18 +1492,76 @@ void fillingTheCartonBoxesC(){
     }
 }
 
+
+
+void createThreads(){
+    //create Threads For Emps Work from Printer To Containers
+    /* create a new 3 threads that will keep move chocolate from Printer Queue To Containers Queues */
+    pthread_t p_thread1;
+    pthread_create(&p_thread1, NULL, (void *)insertToContainers, NULL);
+    pthread_t p_thread2;
+    pthread_create(&p_thread2, NULL, (void *)insertToContainers, NULL);
+    pthread_t p_thread3;
+    pthread_create(&p_thread3, NULL, (void *)insertToContainers, NULL);
+    
+    
+    //createThreadsForEmpsWorkfromContainersToFillingTheCartonBoxes
+    // create a new 3 threads that will keep move chocolate from Containers Queues To filling  Carton Boxes Queues 
+    pthread_t p_thread4;
+    pthread_create(&p_thread4, NULL, (void *)fillingTheCartonBoxesA, NULL);
+    pthread_t p_thread5;
+    pthread_create(&p_thread5, NULL, (void *)fillingTheCartonBoxesB, NULL);
+    pthread_t p_thread6;
+    pthread_create(&p_thread6, NULL, (void *)fillingTheCartonBoxesC, NULL);
+    
+
+
+    //createThreadsForTwoEmpsWorkfromFillingTheCartonBoxesToStorageArea
+     // create a new 2 threads that will keep move chocolate from filling  Carton Boxes Queues To Storage Area Queues 
+    pthread_t p_thread7;
+    pthread_create(&p_thread7, NULL, (void *)insertToStorageArea, NULL);
+    pthread_t p_thread8;
+    pthread_create(&p_thread8, NULL, (void *)insertToStorageArea, NULL);
+    
+
+
+
+    //create Threads For Two Emps Work from Storage Area To Truks
+    // create a new 2 threads that will keep move chocolate from Storage Area Queues To trucks 
+    pthread_t p_thread9;
+    pthread_create(&p_thread9, NULL, (void *)insertToTrucks, NULL);
+    pthread_t p_thread10;
+    pthread_create(&p_thread10, NULL, (void *)insertToTrucks, NULL);
+
+
+    //creatr Thread For Print
+    pthread_t p_thread11;
+    pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
+    
+
+
+    pthread_join(p_thread1, NULL);  
+    pthread_join(p_thread2, NULL);
+    pthread_join(p_thread3, NULL); 
+    pthread_join(p_thread4, NULL);  
+    pthread_join(p_thread5, NULL);
+    pthread_join(p_thread6, NULL);
+    pthread_join(p_thread7, NULL);  
+    pthread_join(p_thread8, NULL);
+    pthread_join(p_thread9, NULL);  
+    pthread_join(p_thread10, NULL);
+    pthread_join(p_thread11, NULL);  
+    
+
+}
+
+
+
 void test_simulation(){
 
-    for(int i = 0;i < 2;i++)
-        testPrintingQueue();
-    createThreadsForTwoEmpsWorkfromStorageAreaToTruks();
-    createThreadsForEmpsWorkfromPrinterToContainers();
-    createThreadsForEmpsWorkfromContainersToFillingTheCartonBoxes();
-    createThreadsForTwoEmpsWorkfromFillingTheCartonBoxesToStorageArea();
-    //creatrThreadForPrint();
-    //sleep(5);
-    //displyStorageAreaQueueA();
-    //displyStorageAreaQueueB();
-    //displyStorageAreaQueueC();
+    for(int i = 0;i < 50;i++)
+        testEnqueueToPrintingQueue();
+    createThreads();
+    
 
 }
