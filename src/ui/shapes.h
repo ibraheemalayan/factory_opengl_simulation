@@ -13,7 +13,9 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, 
 
 void draw_item(Item *item);
 void drawMetalDetector();
-void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
+void draw_text();
+void draw_truck(int x, int y);
+void draw_printer_animation(GLfloat x, GLfloat y, float rotation);
 
 /*
  * Function that handles the drawing of a circle using the triangle fan
@@ -44,7 +46,36 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, GLubyte *color)
     glEnd();
 }
 
-void draw_item(Item *item)
+void draw_truck(int x, int y)
+{
+    int R = 0, G = 100, B = 0;
+
+    glBegin(GL_QUADS);
+    glColor3ub(R, G, B);
+    glVertex2f(x, y);
+    glVertex2f(x + TRUCK_CONTAINER_WIDTH, y);
+    glVertex2f(x + TRUCK_CONTAINER_WIDTH, y + TRUCK_CONTAINER_HEIGHT);
+    glVertex2f(x, y + TRUCK_CONTAINER_HEIGHT);
+    glEnd();
+
+    R = 0;
+    G = 0;
+    B = 0;
+
+    glBegin(GL_QUADS);
+    glColor3ub(R, G, B);
+
+    int cabin_x = x + TRUCK_CONTAINER_WIDTH;
+    int cabin_y = y + TRUCK_CABIN_Y_OFFSET;
+
+    glVertex2f(cabin_x, cabin_y);
+    glVertex2f(cabin_x + TRUCK_CABIN_WIDTH, cabin_y);
+    glVertex2f(cabin_x + TRUCK_CABIN_WIDTH, cabin_y + TRUCK_CABIN_HEIGHT);
+    glVertex2f(cabin_x, cabin_y + TRUCK_CABIN_HEIGHT);
+    glEnd();
+}
+
+void draw_item(ItemObj *item)
 {
 
     GLubyte *color = NULL;

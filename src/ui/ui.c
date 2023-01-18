@@ -10,7 +10,7 @@ int msg_q_id;
 
 void paint_and_swap_frame();
 void background();
-int read_message_queue(HashTable *ht);
+int read_and_handle_msg_queue(HashTable *ht);
 void draw_items_in_queues();
 void update_moving_items_locations();
 void setup_message_queue();
@@ -66,6 +66,10 @@ void paint_and_swap_frame()
 
     draw_items_in_queues();
 
+    draw_truck(PARKED_TRUCK_X + truck_1_x_distance, PARKED_TRUCK_1_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
+    draw_truck(PARKED_TRUCK_X + truck_2_x_distance, PARKED_TRUCK_2_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
+    draw_truck(PARKED_TRUCK_X + truck_3_x_distance, PARKED_TRUCK_3_Y - TRUCK_QUEUE_ROAD_Y_OFFSET);
+
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
 
@@ -114,82 +118,116 @@ void update_moving_items_locations()
     }
 }
 
-int read_message_queue(HashTable *ht)
+int read_and_handle_msg_queue(HashTable *ht)
 {
 
-    return -1;
+    message_buf message_queue_buffer;
 
-    //     message_buf message_queue_buffer;
+    // msg_type set to Zero to read the first message in the queue regarless of it its type
+    if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
+    {
+        if (errno == ENOMSG)
+        {
+            return -1;
+        }
 
-    //     // msg_type set to Zero to read the first message in the queue regarless of it its type
-    //     if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
-    //     {
-    //         if (errno == ENOMSG)
-    //         {
-    //             return -1;
-    //         }
+        // if the error is not ENOMSG, then it is an error
+        perror("msgrcv");
+        exit(3);
+    }
 
-    //         // if the error is not ENOMSG, then it is an error
-    //         perror("msgrcv");
-    //         exit(3);
-    //     }
+    // printf("received message:\n\n");
+    // print_message(&(message_queue_buffer.payload));
 
-    //     // printf("received message:\n\n");
-    //     // print_message(&(message_queue_buffer.payload));
+    if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
+    {
 
-    //     if (message_queue_buffer.payload.msg_type == PersonEntered)
-    //     {
+        LocationObject *current_location = locations_ptrs[message_queue_buffer.payload.current_location];
 
-    //         LocationObject *current_location = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
-    //         Person *p = create_person(
-    //             message_queue_buffer.payload.person_pid,
-    //             message_queue_buffer.payload.index_in_queue,
-    //             message_queue_buffer.payload.gender,
-    //             message_queue_buffer.payload.angriness,
-    //             current_location);
+        ItemObj *it = create_item_obj(
+            message_queue_buffer.payload.id,
+            message_queue_buffer.payload.index,
+            message_queue_buffer.payload.item_type,
+            message_queue_buffer.payload.chocolate_type,
+            current_location);
 
-    //         p->destination_coords = get_queue_location_coords_for_index(current_location, p->index_in_queue);
+        it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
 
-    //         ht_insert(ht, p->id, p);
-    //     }
-    //     else if (message_queue_buffer.payload.msg_type == PersonExitedUnserved)
-    //     {
-    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-    //         p->destination_coords.y = 1000;
-    //         p->angriess = 1;
-    //     }
-    //     else if (message_queue_buffer.payload.msg_type == PersonExitedSatisfied)
-    //     {
-    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-    //         p->destination_coords.y = -1000;
-    //         p->angriess = 0;
-    //     }
-    //     else if (message_queue_buffer.payload.msg_type == PersonExitedUnsatisfied)
-    //     { // TODO color satisfied in green
-    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-    //         p->destination_coords.y = -1000;
-    //         p->angriess = 1;
-    //     }
-    //     else if (message_queue_buffer.payload.msg_type == PersonUpdated)
-    //     {
-    //         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
-    //         LocationObject *current_location = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
+        ht_insert(ht, it->id, it);
 
-    //         if (p->current_location != current_location)
-    //         {
-    //             p->current_location->current_people--;
-    //             p->current_location = current_location;
-    //             current_location->current_people++;
-    //         }
-    //         p->index_in_queue = message_queue_buffer.payload.index_in_queue;
+        if (message_queue_buffer.payload.item_type != PRODUCT)
+        {
+            int num_of_ids = (message_queue_buffer.payload.item_type == CARTON_BOX) ? 2 : 10;
+            for (int i = 0; i < num_of_ids; i++)
+            {
+                ht_delete(ht, message_queue_buffer.payload.ids_to_delete[i]);
+            }
+        }
+    }
+    else if (message_queue_buffer.payload.msg_type == TRUCK_RETURNED)
+    {
+        if (message_queue_buffer.payload.index == 1)
+        {
+            truck_1_x_destintation = PARKED_TRUCK_X_DISTANCE;
+        }
+        else if (message_queue_buffer.payload.index == 2)
+        {
+            truck_2_x_destintation = PARKED_TRUCK_X_DISTANCE;
+        }
+        else
+        {
+            truck_3_x_destintation = PARKED_TRUCK_X_DISTANCE;
+        }
+    }
+    else if (message_queue_buffer.payload.msg_type == TRUCK_LEFT)
+    {
 
-    //         p->destination_coords = get_queue_location_coords_for_index(current_location, p->index_in_queue);
+        for (int i = 0; i < MAX_BOXES_PER_TRUCK; i++)
+        {
+            if (message_queue_buffer.payload.ids_to_delete[i] == 0)
+            {
+                continue;
+            }
+            ht_delete(ht, message_queue_buffer.payload.ids_to_delete[i]);
+        }
 
-    //         p->index_in_queue = message_queue_buffer.payload.index_in_queue;
-    //         p->angriess = message_queue_buffer.payload.angriness;
-    //     }
+        if (message_queue_buffer.payload.index == 1)
+        {
+            truck_1_x_destintation = LEFT_TRUCK_X_DISTANCE;
+        }
+        else if (message_queue_buffer.payload.index == 2)
+        {
+            truck_2_x_destintation = LEFT_TRUCK_X_DISTANCE;
+        }
+        else
+        {
+            truck_3_x_destintation = LEFT_TRUCK_X_DISTANCE;
+        }
+    }
+    else if (message_queue_buffer.payload.msg_type == OBJECT_MOVED)
+    {
+        ItemObj *it = ht_search(ht, message_queue_buffer.payload.id);
+        LocationObject *current_location = locations_ptrs[message_queue_buffer.payload.current_location];
 
-    //     return 1;
+        if (it->current_location != current_location)
+        {
+            it->current_location->current_items--;
+            it->current_location = current_location;
+            current_location->current_items++;
+
+            if (message_queue_buffer.payload.current_location >= TRUCK_1 || message_queue_buffer.payload.current_location <= TRUCK_3)
+            {
+                it->index_in_queue = 0;
+            }
+        }
+        it->index_in_queue = message_queue_buffer.payload.index;
+
+        it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
+
+        it->index_in_queue = message_queue_buffer.payload.index;
+    }
+
+    return 1;
 }
 
 void recursive_timed_update(int time)
@@ -200,12 +238,13 @@ void recursive_timed_update(int time)
     }
     glutPostRedisplay(); // marks the current window as needing to be redisplayed
 
-    while (read_message_queue(ht) != -1)
+    while (read_and_handle_msg_queue(ht) != -1)
     {
         // keep reading messgaes until queue is empty
     }
 
     update_moving_items_locations();
+    update_truck_locations();
 
     male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
     female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
@@ -242,9 +281,30 @@ void setup_ui(int argc, char **argv)
 
 //         ht_insert(ht, p->id, p);
 
-//         q->current_people++;
-//     }
-// }
+            rand_queue_index = random_int_in_range(1, 7);
+        }
+        else if (p_type == PATCH)
+        {
+            rand_queue_index = random_int_in_range(8, 17);
+        }
+        else // if (p_type == BOX)
+        {
+            rand_queue_index = random_int_in_range(18, 22);
+        }
+
+        LocationObject *q = locations[rand_queue_index];
+
+        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q);
+
+        item_obj->destination_coords = get_queue_location_coords_for_index(q, item_obj->index_in_queue);
+
+        // print_item(item_obj);
+
+        ht_insert(ht, item_obj->id, item_obj);
+
+        q->current_items++;
+    }
+}
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char **argv)
@@ -270,7 +330,9 @@ int main(int argc, char **argv)
 
     ht = create_table(CAPACITY);
 
-    // setup_message_queue();
+    create_random_items(locations_ptrs);
+
+    setup_message_queue();
 
     glutMainLoop(); // Enter the event-processing loop
 

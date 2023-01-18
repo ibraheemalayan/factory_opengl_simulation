@@ -2,6 +2,7 @@
 #define __UI_GLOBALS_H_
 
 #include "../include.h"
+#include "./constants.h"
 #include "./structs.h"
 #include "./hash_table.h"
 
@@ -55,5 +56,13 @@ int simulation_finished = 0;
 
 double male_rolling_gate_rotation = 0;
 double female_rolling_gate_rotation = 0;
+
+double truck_1_x_distance = LEFT_TRUCK_X_DISTANCE;
+double truck_2_x_distance = LEFT_TRUCK_X_DISTANCE;
+double truck_3_x_distance = LEFT_TRUCK_X_DISTANCE;
+
+double truck_1_x_destintation = PARKED_TRUCK_X_DISTANCE;
+double truck_2_x_destintation = PARKED_TRUCK_X_DISTANCE;
+double truck_3_x_destintation = PARKED_TRUCK_X_DISTANCE;
 
 #endif
