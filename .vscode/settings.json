@@ -5,7 +5,6 @@
         "ui_helper.h": "c",
         "constants.h": "c",
         "glut.h": "c",
-        "local.h": "c",
-        "structs.h": "c"
+        "local.h": "c"
     }
 }

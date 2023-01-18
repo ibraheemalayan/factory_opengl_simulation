@@ -9,17 +9,18 @@
 #include "./constants.h"
 #include "./shapes.h"
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
 Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index);
 Coordinates get_queue_location_coords_for_next(LocationObject *queue);
 void initialize_queues_coordinates(LocationObject *locations[]);
-void update_item_location(ItemObj *item);
+void update_item_location(Item *item);
+void draw_items_in_queues();
 LocationObject *get_proper_location_pointer(Location current_location);
 void draw_locations(LocationObject *locations[]);
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
 {
-    ItemObj *item = (ItemObj *)malloc(sizeof(ItemObj));
+    Item *item = (Item *)malloc(sizeof(Item));
 
     item->id = id;
     item->index_in_queue = index;
@@ -27,11 +28,9 @@ ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType cho
     item->chocolate_type = chocolate_type;
     item->current_location = current_location;
 
-    // printf("Creating item with id: %d, index: %d, pkg_type: %d, chocolate_type: %d, location: %d", id, index, pkg_type, chocolate_type, current_location);
-
     // FIXME
-    item->current_coords.x = -1000 + id * 10;
-    item->current_coords.y = id * 20;
+    item->current_coords.x = -1500;
+    item->current_coords.y = 0;
 
     return item;
 }
@@ -168,7 +167,7 @@ Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index
     return coords;
 }
 
-void update_item_location(ItemObj *item)
+void update_item_location(Item *item)
 {
 
     // update X coordinates

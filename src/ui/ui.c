@@ -53,14 +53,16 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_locations(locations_ptrs);
 
-    draw_text();
+    draw_teller_text();
 
     draw_walls();
 
     drawMetalDetector();
 
-    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, PRINTER_ANIMATION_Y_VALUE, male_rolling_gate_rotation);
-    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, -PRINTER_ANIMATION_Y_VALUE, -female_rolling_gate_rotation);
+    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y, male_rolling_gate_rotation);
+    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y, female_rolling_gate_rotation);
+
+    // draw_rolling_gate(0, -100);
 
     draw_items_in_queues();
 
@@ -97,6 +99,7 @@ void draw_items_in_queues()
 }
 void update_moving_items_locations()
 {
+    return;
     for (int i = 0; i < ht->size; i++)
     {
         if (ht->items[i])
@@ -243,8 +246,8 @@ void recursive_timed_update(int time)
     update_moving_items_locations();
     update_truck_locations();
 
-    male_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
-    female_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
+    male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
+    female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)
@@ -253,35 +256,30 @@ void setup_ui(int argc, char **argv)
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
 
-    glutInitWindowSize(900, 450);                            // Set the window's initial width & height
-    glutInitWindowPosition(0, 0);                            // Position the window's initial top-left corner of the screen
-    glutCreateWindow("Chocolate Factory OpenGL Simulation"); // Create a window with the given title
-    glutDisplayFunc(paint_and_swap_frame);                   // Register display callback handler for window re-paint
-    glutReshapeFunc(reshape);                                // Static display
-    glutTimerFunc(0, recursive_timed_update, 0);             // Call function after specified amount of time
+    glutInitWindowSize(900, 450);                // Set the window's initial width & height
+    glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
+    glutCreateWindow("OIM Simulation");          // Create a window with the given title
+    glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
+    glutReshapeFunc(reshape);                    // Static display
+    glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
 
     background(); // Background color
 }
 
-int random_int_in_range(int lower, int upper)
-{
-    int r = (rand() % (upper - lower + 1)) + lower;
-    return r;
-}
+// void create_random_people()
+// {
 
-void create_random_items(LocationObject *locations[])
-{
+//     for (int i = 1; i < people_count; i++)
+//     {
 
-    for (int i = 1; i < 100; i++)
-    {
+//         gender g = (rand() % 2) ? Male : Female;
+//         LocationObject *q = (g == Male) ? queue_A1 : queue_A2;
 
-        ChocolateType c_type = random_int_in_range(TYPE_A, TYPE_C);
-        ItemType p_type = random_int_in_range(PRODUCT, CARTON_BOX);
+//         Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
 
-        int rand_queue_index = random_int_in_range(1, 22);
+//         p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
 
-        if (p_type == PRODUCT)
-        {
+//         ht_insert(ht, p->id, p);
 
             rand_queue_index = random_int_in_range(1, 7);
         }
@@ -320,8 +318,8 @@ int main(int argc, char **argv)
 
     setup_ui(argc, argv);
 
-    locations_ptrs[0] = NULL;  // location of undefined
-    locations_ptrs[23] = NULL; // location of delivered
+    locations_ptrs[0] = NULL;
+    locations_ptrs[23] = NULL;
 
     for (int i = 0; i <= 22; i++)
     {
