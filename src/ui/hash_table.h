@@ -4,7 +4,7 @@
 #include "./structs.h"
 #include "../include.h"
 
-ItemObj *items[500];
+Item *items[500];
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,11 +19,11 @@ unsigned long hash_function(int k)
 
 typedef struct Ht_item Ht_item;
 
-// Define the Hash Table ItemObjhere
+// Define the Hash Table Item here
 struct Ht_item
 {
     int key;
-    ItemObj *value;
+    Item *value;
 };
 
 typedef struct LinkedList LinkedList;
@@ -143,7 +143,7 @@ static void free_overflow_buckets(HashTable *table)
     free(buckets);
 }
 
-Ht_item *create_item(int key, ItemObj *value)
+Ht_item *create_item(int key, Item *value)
 {
     // Creates a pointer to a new hash table item
     Ht_item *item = (Ht_item *)malloc(sizeof(Ht_item));
@@ -211,7 +211,7 @@ void handle_collision(HashTable *table, unsigned long index, Ht_item *item)
     }
 }
 
-void ht_insert(HashTable *table, int key, ItemObj *value)
+void ht_insert(HashTable *table, int key, Item *value)
 {
     // Create the item
     Ht_item *item = create_item(key, value);
@@ -268,7 +268,7 @@ void ht_insert(HashTable *table, int key, ItemObj *value)
     }
 }
 
-ItemObj *ht_search(HashTable *table, int key)
+Item *ht_search(HashTable *table, int key)
 {
     // Searches the key in the hashtable
     // and returns NULL if it doesn't exist
@@ -363,7 +363,7 @@ void ht_delete(HashTable *table, int key)
 
 void print_search(HashTable *table, int key)
 {
-    ItemObj *val;
+    Item *val;
     if ((val = ht_search(table, key)) == NULL)
     {
         printf("%d does not exist\n", key);

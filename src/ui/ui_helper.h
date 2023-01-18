@@ -9,17 +9,18 @@
 #include "./constants.h"
 #include "./shapes.h"
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location);
 Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index);
 Coordinates get_queue_location_coords_for_next(LocationObject *queue);
 void initialize_queues_coordinates(LocationObject *locations[]);
-void update_item_location(ItemObj *item);
+void update_item_location(Item *item);
+void draw_items_in_queues();
 LocationObject *get_proper_location_pointer(Location current_location);
 void draw_locations(LocationObject *locations[]);
 
-ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
+Item *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType chocolate_type, LocationObject *current_location)
 {
-    ItemObj *item = (ItemObj *)malloc(sizeof(ItemObj));
+    Item *item = (Item *)malloc(sizeof(Item));
 
     item->id = id;
     item->index_in_queue = index;
@@ -27,11 +28,9 @@ ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType cho
     item->chocolate_type = chocolate_type;
     item->current_location = current_location;
 
-    // printf("Creating item with id: %d, index: %d, pkg_type: %d, chocolate_type: %d, location: %d", id, index, pkg_type, chocolate_type, current_location);
-
     // FIXME
-    item->current_coords.x = -1000 + id * 10;
-    item->current_coords.y = id * 20;
+    item->current_coords.x = -1500;
+    item->current_coords.y = 0;
 
     return item;
 }
@@ -129,20 +128,20 @@ void initialize_queues_coordinates(LocationObject *locations[])
     locations[STORAGE_AREA]->height = STORAGE_HEIGHT;
     locations[STORAGE_AREA]->current_items = 0;
 
-    locations[TRUCK_1]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_1]->coords.y = TRUCK_1_PARKING_Y_VALUE;
+    locations[TRUCK_1]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_1]->coords.y = TRUCK_1_ROAD_Y_VALUE;
     locations[TRUCK_1]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_1]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_1]->current_items = 0;
 
-    locations[TRUCK_2]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_2]->coords.y = TRUCK_2_PARKING_Y_VALUE;
+    locations[TRUCK_2]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_2]->coords.y = TRUCK_2_ROAD_Y_VALUE;
     locations[TRUCK_2]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_2]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_2]->current_items = 0;
 
-    locations[TRUCK_3]->coords.x = TRUCK_PARKING_X_VALUE;
-    locations[TRUCK_3]->coords.y = TRUCK_3_PARKING_Y_VALUE;
+    locations[TRUCK_3]->coords.x = TRUCK_ROAD_X_VALUE;
+    locations[TRUCK_3]->coords.y = TRUCK_3_ROAD_Y_VALUE;
     locations[TRUCK_3]->width = TRUCK_PARKING_WIDTH;
     locations[TRUCK_3]->height = TRUCK_PARKING_HEIGHT;
     locations[TRUCK_3]->current_items = 0;
@@ -168,7 +167,7 @@ Coordinates get_queue_location_coords_for_index(LocationObject *queue, int index
     return coords;
 }
 
-void update_item_location(ItemObj *item)
+void update_item_location(Item *item)
 {
 
     // update X coordinates
@@ -202,19 +201,70 @@ void update_item_location(ItemObj *item)
     }
 }
 
+void update_truck_locations()
+{
+
+    // update truck 1 x coordinates
+    if (truck_1_x_distance != truck_1_x_destintation)
+    {
+
+        float remaing_distance = truck_1_x_distance - truck_1_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_1_x_distance = truck_1_x_destintation;
+        }
+        else
+        {
+            truck_1_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
+        }
+    }
+
+    // update truck 2 x coordinates
+    if (truck_2_x_distance != truck_2_x_destintation)
+    {
+
+        float remaing_distance = truck_2_x_distance - truck_2_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_2_x_distance = truck_2_x_destintation;
+        }
+        else
+        {
+            truck_2_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
+        }
+    }
+
+    // update truck 3 x coordinates
+    if (truck_3_x_distance != truck_3_x_destintation)
+    {
+
+        float remaing_distance = truck_3_x_distance - truck_3_x_destintation;
+
+        if ((remaing_distance < TRUCK_STEP_SIZE && remaing_distance > 0) || (remaing_distance > -TRUCK_STEP_SIZE && remaing_distance < 0))
+        {
+            truck_3_x_distance = truck_3_x_destintation;
+        }
+        else
+        {
+            truck_3_x_distance += (remaing_distance > 0) ? -TRUCK_STEP_SIZE : TRUCK_STEP_SIZE;
+        }
+    }
+}
+
 void draw_locations(LocationObject *locations[])
 {
     int R, G, B;
 
     for (int i = 1; i <= 22; i++)
     {
-        draw_rectangle(locations[i]->coords.x, locations[i]->coords.y, locations[i]->width, locations[i]->height, 220, 220, 220);
-        if (i == 3)
+        if (i >= TRUCK_1 && i <= TRUCK_3)
         {
-            R = 220;
-            G = 220;
-            B = 220;
+            draw_rectangle(locations[i]->coords.x + TRUCK_QUEUE_ROAD_X_OFFSET, locations[i]->coords.y + TRUCK_QUEUE_ROAD_Y_OFFSET, locations[i]->width, locations[i]->height, 220, 220, 220);
+            continue;
         }
+        draw_rectangle(locations[i]->coords.x, locations[i]->coords.y, locations[i]->width, locations[i]->height, 220, 220, 220);
     }
 }
 
