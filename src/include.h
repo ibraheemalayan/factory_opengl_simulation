@@ -130,6 +130,10 @@ struct message_payload
   ItemType item_type;
   // used to delete items when turned into another object
   int ids_to_delete[MAX_BOXES_PER_TRUCK]; // can be ids of items, patches, boxes
+  int id;
+  ItemType pkg_type;
+  ChocolateType chocolate_type;
+  int index_in_queue;
 };
 
 // when an object is created:
@@ -167,8 +171,11 @@ struct Object
   ChocolateType type;
   char progress[8];
   int id;
+  Location current_location;
+
 } chocolateProduct;
 
+typedef struct Object chocolateProduct;
 typedef struct message_payload message_payload;
 
 struct message_buf
@@ -181,6 +188,8 @@ typedef struct employee_information
 {
   int linenum;
   int index;
+  
+  
 }employee_information;
 
 typedef struct message_buf message_buf;
