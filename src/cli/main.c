@@ -1216,42 +1216,42 @@ void testPrintingQueue(){
         message_payload ch1;
         ch1.chocolate_type=TYPE_A;
         ch1.current_location=PRINTER;
-        ch1.pkg_type=PATCH;
+        ch1.item_type=PATCH;
         ch1.index_in_queue=0;
         ch1.id=1;
         enqueueToQueue(ch1,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
         message_payload ch2;
         ch2.chocolate_type=TYPE_B;
         ch2.current_location=PRINTER;
-        ch2.pkg_type=PATCH;
+        ch2.item_type=PATCH;
         ch2.index_in_queue=0;
         ch2.id=2;
         enqueueToQueue(ch2,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
         message_payload ch3;
         ch3.chocolate_type=TYPE_C;
         ch3.current_location=PRINTER;
-        ch3.pkg_type=PATCH;
+        ch3.item_type=PATCH;
         ch3.index_in_queue=0;
         ch3.id=3;
         enqueueToQueue(ch3,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
         message_payload ch5;
         ch5.chocolate_type=TYPE_A;
         ch5.current_location=PRINTER;
-        ch5.pkg_type=PATCH;
+        ch5.item_type=PATCH;
         ch5.index_in_queue=0;
         ch5.id=4;
         enqueueToQueue(ch5,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
         message_payload ch4;
         ch4.chocolate_type=TYPE_B;
         ch4.current_location=PRINTER;
-        ch4.pkg_type=PATCH;
+        ch4.item_type=PATCH;
         ch4.index_in_queue=0;
         ch4.id=5;
         enqueueToQueue(ch4,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
         message_payload ch6;
         ch6.chocolate_type=TYPE_C;
         ch6.current_location=PRINTER;
-        ch6.pkg_type=PATCH;
+        ch6.item_type=PATCH;
         ch6.index_in_queue=0;
         ch6.id=6;
         enqueueToQueue(ch6,&printingQueue_mutex,&FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
@@ -1466,9 +1466,9 @@ void fillingTheCartonBoxesA(){
                     chocolate1=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolatePatchesInContainerTypeA);
                     chocolate2=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolatePatchesInContainerTypeA);
                     chocolate1.current_location=CARTON_BOX_A;
-                    chocolate1.pkg_type=CARTON_BOX;
+                    chocolate1.item_type=CARTON_BOX;
                     chocolate2.current_location=CARTON_BOX_A;
-                    chocolate2.pkg_type=CARTON_BOX;
+                    chocolate2.item_type=CARTON_BOX;
                     enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[0], &FrontFillingTheCartonBoxesTypeAQueue, &RearFillingTheCartonBoxesTypeAQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeA);
             }
     }
@@ -1485,9 +1485,9 @@ void fillingTheCartonBoxesB(){
                     chocolate1=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[1], &FrontContainerTypeBQueue, &G_numberOfchocolatePatchesInContainerTypeB);
                     chocolate2=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[1], &FrontContainerTypeBQueue, &G_numberOfchocolatePatchesInContainerTypeB);
                     chocolate1.current_location=CARTON_BOX_B;
-                    chocolate1.pkg_type=CARTON_BOX;
+                    chocolate1.item_type=CARTON_BOX;
                     chocolate2.current_location=CARTON_BOX_B;
-                    chocolate2.pkg_type=CARTON_BOX;
+                    chocolate2.item_type=CARTON_BOX;
                     enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[1], &FrontFillingTheCartonBoxesTypeBQueue, &RearFillingTheCartonBoxesTypeBQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB);
             }
     }
@@ -1504,9 +1504,9 @@ void fillingTheCartonBoxesC(){
                     chocolate1=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &G_numberOfchocolatePatchesInContainerTypeC);
                     chocolate2=dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &G_numberOfchocolatePatchesInContainerTypeC);
                     chocolate1.current_location=CARTON_BOX_C;
-                    chocolate1.pkg_type=CARTON_BOX;
+                    chocolate1.item_type=CARTON_BOX;
                     chocolate2.current_location=CARTON_BOX_C;
-                    chocolate2.pkg_type=CARTON_BOX;
+                    chocolate2.item_type=CARTON_BOX;
                     enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[2], &FrontFillingTheCartonBoxesTypeCQueue, &RearFillingTheCartonBoxesTypeCQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC);
             }
     }
