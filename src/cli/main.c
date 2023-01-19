@@ -247,7 +247,7 @@ void start_simulation()
     create_patcher_employees();
     create_printer_machine();
 
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < 4; i++)
         testEnqueueToPrintingQueue();
     createThreads();
 
@@ -968,12 +968,6 @@ void load_user_defined_values()
     fclose(fp);
 }
 
-//..................................new mohammad..................................
-
-/*Noor : use this function with the two threads:
- "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
- Hint 1 :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */
-
 void enqueueToQueue(message_payload chocolateInfo, pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, struct chocolateNode **RearQueue, int *numberOfchocolateItemInQueueTypeT)
 {
     pthread_mutex_lock(mutex);
@@ -1078,15 +1072,15 @@ void displyStorageAreaQueueA()
     struct chocolateNode *temp = NULL;
     if ((FrontStoragAreaTypeAQueue == NULL))
     {
-        printf("\n\nStorage Area Queue A is Empty\n");
+        printf("\nStorage Area Queue A is Empty\n");
     }
     else
     {
-        printf("\n\nStorage Area Queue A is :\n\n");
+        printf("\nStorage Area Queue A is :\n");
         temp = FrontStoragAreaTypeAQueue;
         while (temp)
         {
-            printf("\n\nlocation in Storage Area Queue A:  %d  type: %d   id:%d\n\n", temp->chocolateInfo.current_location, temp->chocolateInfo.chocolate_type, temp->chocolateInfo.id);
+            printf("\nlocation in Storage Area Queue A:  %d  type: %d   id:%d\n", temp->chocolateInfo.current_location, temp->chocolateInfo.chocolate_type, temp->chocolateInfo.id);
             temp = temp->next;
         }
     }
