@@ -191,16 +191,7 @@ int main()
     run_gui();
 
     // register signal handler for SIGINT to clean up
-    //signal(SIGINT, interrupt_sig_handler);
-
-
-    //start_simulation();
-    
-    load_user_defined_values();
-    //..................................new mohammad..................................
-
-    test_simulation();
-    // .................................end new........................................
+    signal(SIGINT, interrupt_sig_handler);
     
 
 
