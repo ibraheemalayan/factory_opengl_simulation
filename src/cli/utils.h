@@ -14,6 +14,48 @@ void create_and_setup_message_queues(); // creates the message queue
 void clean_up();                        // cleans up the message queues, and kills the gui and all children
 void interrupt_sig_handler(int sig);    // signal handler for interrupts, to clean up resources
 
+
+
+int count = 0;
+int start_flag = 0;
+
+
+// Arrays of threads
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
+pthread_t g_Array_of_Threads_TypeA[3][8];
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeB
+pthread_t g_Array_of_Threads_TypeB[2][6];
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC
+pthread_t g_Array_of_Threads_TypeC[2][5];
+// Generator thread; produces chocolate products to be processed
+pthread_t generator;
+// patcher employees
+pthread_t patcher_employees[2];
+// printer thread
+pthread_t printer;
+
+// array of pthread mutexes for each line
+pthread_mutex_t A_pile_mutex [3][PILESIZE];
+pthread_mutex_t B_pile_mutex [2][PILESIZE];
+pthread_mutex_t C_pile_mutex [2][PILESIZE];
+pthread_mutex_t patch_mutex_A;
+pthread_mutex_t patch_mutex_B;
+pthread_mutex_t patch_mutex_C;
+pthread_mutex_t id_mutex;
+// Arrays of mutex //Steps 1 to 6 have to happen in order
+
+
+
+int generate_uniq_id(){
+    int temp;
+    pthread_mutex_lock(&id_mutex);
+    temp = id_counter;
+    id_counter += 1;
+    pthread_mutex_unlock(&id_mutex);
+    return temp;
+}
+
+
 void run_gui()
 {
 
@@ -218,24 +260,22 @@ void generate_product(int empty_index, char type, int linenum){
             break;
     }
 
-    id_counter+=(5 + rand()%100);
-    // printf("%d\t%d new\n", linenum,empty_index);
-    id = id_counter;
     if (type == 'a'){
-        type_A_pile[linenum][empty_index].id = id_counter;
+        type_A_pile[linenum][empty_index].id = generate_uniq_id();
         sprintf(type_A_pile[linenum][empty_index].progress, "%s",progress);
         type_A_pile[linenum][empty_index].type = type_num;
     } else if (type == 'b'){
-        type_B_pile[linenum][empty_index].id = id_counter;
+        type_B_pile[linenum][empty_index].id = generate_uniq_id();
         sprintf(type_B_pile[linenum][empty_index].progress, "%s",progress);
         type_B_pile[linenum][empty_index].type = type_num;
     } else if (type == 'c'){
-        type_C_pile[linenum][empty_index].id = id_counter;
+        type_C_pile[linenum][empty_index].id = generate_uniq_id();
         sprintf(type_C_pile[linenum][empty_index].progress, "%s",progress);
         type_C_pile[linenum][empty_index].type = type_num;
     }else{
         perror("UNEXCPECTED: PRODUCT GENERATOR");
     }
 }
+
 
 #endif

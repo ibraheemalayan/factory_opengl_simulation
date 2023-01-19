@@ -6,34 +6,6 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-int count = 0;
-int start_flag = 0;
-
-
-// Arrays of threads
-// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
-pthread_t g_Array_of_Threads_TypeA[3][8];
-// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeB
-pthread_t g_Array_of_Threads_TypeB[2][6];
-// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC
-pthread_t g_Array_of_Threads_TypeC[2][5];
-// Generator thread; produces chocolate products to be processed
-pthread_t generator;
-// patcher employees
-pthread_t patcher_employees[2];
-// printer thread
-pthread_t printer;
-
-// array of pthread mutexes for each line
-pthread_mutex_t A_pile_mutex [3][PILESIZE];
-pthread_mutex_t B_pile_mutex [2][PILESIZE];
-pthread_mutex_t C_pile_mutex [2][PILESIZE];
-pthread_mutex_t patch_mutex_A;
-pthread_mutex_t patch_mutex_B;
-pthread_mutex_t patch_mutex_C;
-// Arrays of mutex //Steps 1 to 6 have to happen in order
-
-
 //.................Functions....................
 void initiate_mutexes();
 void load_user_defined_values();
@@ -283,6 +255,11 @@ void initiate_mutexes(){
         exit(1);
     }
 
+    if (pthread_mutex_init(&id_mutex, NULL) == -1){
+        perror("id mutex :");
+        exit(1);
+    }
+
 }
 
 void start_simulation()
@@ -497,6 +474,7 @@ void employee_lineA(void * position){
             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){
                 if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1' ))){
                     type_A_pile[linenum][i].progress[index] = '1';
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     usleep(step_time);
                     if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0){
                         buf.payload.id = type_A_pile[linenum][i].id;
@@ -554,8 +532,10 @@ void employee_lineB(void * position){
         if (i != PILESIZE)
         {
             if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0){
+                
                 if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1')){
                     type_B_pile[linenum][i].progress[index] = '1';
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     usleep(step_time);
                     if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0){
                         buf.payload.id = type_B_pile[linenum][i].id;
@@ -614,6 +594,7 @@ void employee_lineC(void * position){
         {
             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
                 if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1' ))){
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     type_C_pile[linenum][i].progress[index] = '1';
                     usleep(step_time);
                     if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0){
@@ -639,15 +620,17 @@ void employee_lineC(void * position){
 void patcher_routine(void *argptr){
     while(start_flag ==  0);
     int j = 0;
+    int o = 0;
     message_buf buf;
     message_buf send;
     send.mtype = 1;
     send.payload.item_type = PATCH;
+
     while(1){
         if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
         }else{
             buf.mtype = 1;
-            switch (buf.payload.chocolate_type){
+            switch (buf.payload.chocolate_type){   
                 case TYPE_A:
                     buf.payload.current_location=PATCHING_A;
                     break;
@@ -663,13 +646,15 @@ void patcher_routine(void *argptr){
 
             if (buf.payload.chocolate_type == TYPE_A){
                 pthread_mutex_lock(&patch_mutex_A);
+                arr_A[type_A_patch] = buf.payload.id;
                 type_A_patch++;
                 if (type_A_patch == 10){
                     type_A_patch = 0;
                     send.payload.chocolate_type = TYPE_A;
                     buf.payload.item_type=PATCH;
-                    buf.payload.id = patch_id_A;
-                    patch_id_A += 10;
+                    buf.payload.id = generate_uniq_id();
+                    for (o = 0; o < 9;o++ )
+                        buf.payload.ids_to_delete[o] = arr_A[o];
                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
                 }
@@ -678,12 +663,14 @@ void patcher_routine(void *argptr){
             }else if (buf.payload.chocolate_type == TYPE_B){
                 pthread_mutex_lock(&patch_mutex_B);
                 type_B_patch++;
+                arr_B[type_B_patch] = buf.payload.id;
                 if (type_B_patch == 10){
                     type_B_patch = 0;
                     send.payload.chocolate_type = TYPE_B;
                     buf.payload.item_type=PATCH;
-                    buf.payload.id = patch_id_B;
-                    patch_id_B += 10;
+                    buf.payload.id = generate_uniq_id();
+                    for (o = 0; o < 9;o++ )
+                        buf.payload.ids_to_delete[o] = arr_B[o];
                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
                 }
@@ -692,12 +679,14 @@ void patcher_routine(void *argptr){
             }else if (buf.payload.chocolate_type == TYPE_C){
                 pthread_mutex_lock(&patch_mutex_C);
                 type_C_patch++;
+                arr_C[type_C_patch] = buf.payload.id;
                 if (type_C_patch == 10){
                     type_C_patch = 0;
                     send.payload.chocolate_type = TYPE_C;
                     buf.payload.item_type=PATCH;
-                    buf.payload.id = patch_id_C;
-                    patch_id_C += 10;
+                    buf.payload.id = generate_uniq_id();
+                    for (o = 0; o < 9;o++ )
+                        buf.payload.ids_to_delete[o] = arr_C[o];
                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
                 }
