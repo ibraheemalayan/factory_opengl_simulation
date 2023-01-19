@@ -6,6 +6,8 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+/* problem is either in the generator or the employees*/
+
 //.................Functions....................
 void initiate_mutexes();
 void load_user_defined_values();
@@ -188,7 +190,7 @@ int main()
     initiate_mutexes();
 
 
-    run_gui();
+    // run_gui();
 
     // register signal handler for SIGINT to clean up
     signal(SIGINT, interrupt_sig_handler);
@@ -251,6 +253,8 @@ void initiate_mutexes(){
         exit(1);
     }
 
+    printf("initiated mutexes\n");
+
 }
 
 void start_simulation()
@@ -262,6 +266,7 @@ void start_simulation()
     create_patcher_employees();
     create_printer_machine();
     start_flag = 1;
+    printf("set falg = 1\n");
 }
 
 void create_generator_thread(){
@@ -269,6 +274,7 @@ void create_generator_thread(){
         perror("generator thread creation: ");
         exit(1);
     }
+    printf("created generator thread\n");
 }
 
 void create_employees_threads_type_A()
@@ -288,6 +294,7 @@ void create_employees_threads_type_A()
             usleep(50000);
         }
     }
+    printf("Created A employees\n");
 }
 
 void create_employees_threads_type_B()
@@ -307,6 +314,7 @@ void create_employees_threads_type_B()
             usleep(50000);
         }
     }
+    printf("created B employees\n");
 }
 
 void create_employees_threads_type_C()
@@ -442,7 +450,6 @@ void employee_lineA(void * position){
         clean_up();
         exit(1);
     }
-    // printf("index : %d, linenum : %d\n", index, linenum);
     
     switch (linenum){
         case 0 :
@@ -450,6 +457,9 @@ void employee_lineA(void * position){
             break;
         case 1 :
             buf.payload.current_location = MANUFACTURING_LINE_A2;
+            break;
+        case 2 :
+            buf.payload.current_location = MANUFACTURING_LINE_A3;
             break;
     }
     buf.payload.index = index;
@@ -465,11 +475,11 @@ void employee_lineA(void * position){
             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0){
                 if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1' ))){
                     type_A_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                     usleep(step_time);
                     if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0){
                         buf.payload.id = type_A_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                         type_A_pile[linenum][i].id = 0;
                         f++;
                     }
@@ -526,11 +536,11 @@ void employee_lineB(void * position){
                 
                 if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1')){
                     type_B_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                     usleep(step_time);
                     if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0){
                         buf.payload.id = type_B_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                         type_B_pile[linenum][i].id = 0;
                         f++;
                     }
@@ -585,12 +595,12 @@ void employee_lineC(void * position){
         {
             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0){
                 if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1' ))){
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+                    msgsnd(ui_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                     type_C_pile[linenum][i].progress[index] = '1';
                     usleep(step_time);
                     if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0){
                         buf.payload.id = type_C_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),0);
+                        msgsnd(patcher_msgq_id,&buf,sizeof(buf),IPC_NOWAIT);
                         type_C_pile[linenum][i].id = 0;
                         f++;
                     }
@@ -609,88 +619,88 @@ void employee_lineC(void * position){
 }
 
 void patcher_routine(void *argptr){
-    while(start_flag ==  0);
-    int j = 0;
-    int o = 0;
-    message_buf buf;
-    message_buf send;
-    send.mtype = 1;
-    send.payload.item_type = PATCH;
+//     while(start_flag ==  0);
+//     int j = 0;
+//     int o = 0;
+//     message_buf buf;
+//     message_buf send;
+//     send.mtype = 1;
+//     send.payload.item_type = PATCH;
 
-    while(1){
-        if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
-        }else{
-            buf.mtype = 1;
-            switch (buf.payload.chocolate_type){   
-                case TYPE_A:
-                    buf.payload.current_location=PATCHING_A;
-                    break;
-                case TYPE_B:
-                    buf.payload.current_location=PATCHING_B;
-                    break;
-                case TYPE_C:
-                    buf.payload.current_location=PATCHING_C;
-                    break;
-            }
-            send.payload.current_location=buf.payload.current_location;
-            msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+//     while(1){
+//         if (msgrcv(patcher_msgq_id,  &buf, sizeof(buf),1,IPC_NOWAIT) == -1){
+//         }else{
+//             buf.mtype = 1;
+//             switch (buf.payload.chocolate_type){   
+//                 case TYPE_A:
+//                     buf.payload.current_location=PATCHING_A;
+//                     break;
+//                 case TYPE_B:
+//                     buf.payload.current_location=PATCHING_B;
+//                     break;
+//                 case TYPE_C:
+//                     buf.payload.current_location=PATCHING_C;
+//                     break;
+//             }
+//             send.payload.current_location=buf.payload.current_location;
+//             msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
 
-            if (buf.payload.chocolate_type == TYPE_A){
-                pthread_mutex_lock(&patch_mutex_A);
-                arr_A[type_A_patch] = buf.payload.id;
-                type_A_patch++;
-                if (type_A_patch == 10){
-                    type_A_patch = 0;
-                    send.payload.chocolate_type = TYPE_A;
-                    buf.payload.item_type=PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9;o++ )
-                        buf.payload.ids_to_delete[o] = arr_A[o];
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_A);
-            }else if (buf.payload.chocolate_type == TYPE_B){
-                pthread_mutex_lock(&patch_mutex_B);
-                type_B_patch++;
-                arr_B[type_B_patch] = buf.payload.id;
-                if (type_B_patch == 10){
-                    type_B_patch = 0;
-                    send.payload.chocolate_type = TYPE_B;
-                    buf.payload.item_type=PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9;o++ )
-                        buf.payload.ids_to_delete[o] = arr_B[o];
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_B);
-            }else if (buf.payload.chocolate_type == TYPE_C){
-                pthread_mutex_lock(&patch_mutex_C);
-                type_C_patch++;
-                arr_C[type_C_patch] = buf.payload.id;
-                if (type_C_patch == 10){
-                    type_C_patch = 0;
-                    send.payload.chocolate_type = TYPE_C;
-                    buf.payload.item_type=PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9;o++ )
-                        buf.payload.ids_to_delete[o] = arr_C[o];
-                    msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_C);
-            }
+//             if (buf.payload.chocolate_type == TYPE_A){
+//                 pthread_mutex_lock(&patch_mutex_A);
+//                 arr_A[type_A_patch] = buf.payload.id;
+//                 type_A_patch++;
+//                 if (type_A_patch == 10){
+//                     type_A_patch = 0;
+//                     send.payload.chocolate_type = TYPE_A;
+//                     buf.payload.item_type=PATCH;
+//                     buf.payload.id = generate_uniq_id();
+//                     for (o = 0; o < 9;o++ )
+//                         buf.payload.ids_to_delete[o] = arr_A[o];
+//                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+//                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+//                 }
+//                 usleep(PATCHER_TIME);
+//                 pthread_mutex_unlock(&patch_mutex_A);
+//             }else if (buf.payload.chocolate_type == TYPE_B){
+//                 pthread_mutex_lock(&patch_mutex_B);
+//                 type_B_patch++;
+//                 arr_B[type_B_patch] = buf.payload.id;
+//                 if (type_B_patch == 10){
+//                     type_B_patch = 0;
+//                     send.payload.chocolate_type = TYPE_B;
+//                     buf.payload.item_type=PATCH;
+//                     buf.payload.id = generate_uniq_id();
+//                     for (o = 0; o < 9;o++ )
+//                         buf.payload.ids_to_delete[o] = arr_B[o];
+//                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+//                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+//                 }
+//                 usleep(PATCHER_TIME);
+//                 pthread_mutex_unlock(&patch_mutex_B);
+//             }else if (buf.payload.chocolate_type == TYPE_C){
+//                 pthread_mutex_lock(&patch_mutex_C);
+//                 type_C_patch++;
+//                 arr_C[type_C_patch] = buf.payload.id;
+//                 if (type_C_patch == 10){
+//                     type_C_patch = 0;
+//                     send.payload.chocolate_type = TYPE_C;
+//                     buf.payload.item_type=PATCH;
+//                     buf.payload.id = generate_uniq_id();
+//                     for (o = 0; o < 9;o++ )
+//                         buf.payload.ids_to_delete[o] = arr_C[o];
+//                     msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
+//                     msgsnd(printer_msgq_id, &send, sizeof(send), 0);
+//                 }
+//                 usleep(PATCHER_TIME);
+//                 pthread_mutex_unlock(&patch_mutex_C);
+//             }
 
-        }
-        j++;
-        if (j == 1000)//termination condition
-            break;
-    }
-    pthread_exit(0);
+//         }
+//         j++;
+//         if (j == 1000)//termination condition
+//             break;
+//     }
+//     pthread_exit(0);
 }
 
 void printer_routine(void *argptr){
@@ -700,7 +710,7 @@ void printer_routine(void *argptr){
     while(1){
         if(msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1){
         }else{
-            printf("printer received msg\n");
+            // printf("printer received msg\n");
             buf.payload.current_location = PRINTER;
             msgsnd(ui_msgq_id,&buf,sizeof(buf),0);
             for (int i = 0; i < 10; i ++){
