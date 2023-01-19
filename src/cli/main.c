@@ -1,4 +1,4 @@
-
+/* reason for issue is with generator or employees*/
 
 #include "local.h"
 #include "utils.h"
@@ -477,6 +477,9 @@ void employee_lineA(void *position)
         break;
     case 1:
         buf.payload.current_location = MANUFACTURING_LINE_A2;
+        break;
+    case 2:
+        buf.payload.current_location = MANUFACTURING_LINE_A3;
         break;
     }
     buf.payload.index = index;
