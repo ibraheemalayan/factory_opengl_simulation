@@ -27,18 +27,6 @@
 #define PERSON 1L
 #define PILESIZE 10
 
-enum MsgType
-{
-  ITEM = 1,
-  NEWPATCH,
-  NEWBOX,
-  NEWTRUCK,
-
-  PATCHUPDATED,
-  BOXUPDATED,
-  ITEMUPDATED,
-  TRUCKUPDATED,
-};
 #define MAX_BOXES_PER_TRUCK 15
 
 enum ItemType
@@ -92,9 +80,7 @@ enum Location
   CARTON_BOX_C,
 
   // storage
-  STORAGE_AREA_A,
-  STORAGE_AREA_B,
-  STORAGE_AREA_C,
+  STORAGE_AREA,
 
   // trucks
   TRUCK_1,
@@ -158,14 +144,6 @@ struct message_payload
 
 typedef struct message_payload message_payload;
 
-struct message_buf
-{
-  long mtype; // first field of the message struct should be the message type
-  message_payload payload;
-};
-
-typedef struct message_buf message_buf;
-
 struct Object
 {
   ChocolateType type;
@@ -183,6 +161,7 @@ struct message_buf
   long mtype; // first field of the message struct should be the message type
   message_payload payload;
 };
+typedef struct message_buf message_buf;
 
 typedef struct employee_information
 {
