@@ -126,7 +126,7 @@ typedef struct chocolateProduct
 {
   ChocolateType type;
   char progress[8];
-  unsigned int id;
+  int id;
 } chocolateProduct;
 
 typedef struct message_payload message_payload;
