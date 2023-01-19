@@ -116,7 +116,6 @@ struct message_payload
   ItemType item_type;
   // used to delete items when turned into another object
   int ids_to_delete[MAX_BOXES_PER_TRUCK]; // can be ids of items, patches, boxes
-  ItemType pkg_type;
   int index_in_queue;
 };
 
@@ -149,7 +148,7 @@ struct Object
   int id;
   Location current_location;
 
-} chocolateProduct;
+};
 
 typedef struct Object chocolateProduct;
 typedef struct message_payload message_payload;

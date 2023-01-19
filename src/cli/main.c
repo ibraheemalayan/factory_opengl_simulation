@@ -216,7 +216,7 @@ int main()
     initiate_mutexes();
 
 
-    //run_gui();
+    run_gui();
 
     // register signal handler for SIGINT to clean up
     //signal(SIGINT, interrupt_sig_handler);
