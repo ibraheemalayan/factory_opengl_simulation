@@ -147,11 +147,9 @@ struct Object
   char progress[8];
   int id;
   Location current_location;
-
 };
 
 typedef struct Object chocolateProduct;
-typedef struct message_payload message_payload;
 
 struct message_buf
 {
@@ -164,9 +162,8 @@ typedef struct employee_information
 {
   int linenum;
   int index;
-  
-  
-}employee_information;
+
+} employee_information;
 
 typedef struct message_buf message_buf;
 
