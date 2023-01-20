@@ -27,14 +27,11 @@ unsigned int patch_id_A = 200000;
 unsigned int patch_id_B = 300000;
 unsigned int patch_id_C = 400000;
 
+chocolateProduct type_A_pile[C_MANUFACTURING_LINES_TYPEA][PILESIZE];
 
-chocolateProduct type_A_pile [C_MANUFACTURING_LINES_TYPEA][PILESIZE];
+chocolateProduct type_B_pile[C_MANUFACTURING_LINES_TYPEB][PILESIZE];
 
-
-chocolateProduct type_B_pile [C_MANUFACTURING_LINES_TYPEB][PILESIZE];
-
-
-chocolateProduct type_C_pile [C_MANUFACTURING_LINES_TYPEC][PILESIZE];
+chocolateProduct type_C_pile[C_MANUFACTURING_LINES_TYPEC][PILESIZE];
 
 int type_A_patch = 0;
 int type_B_patch = 0;
@@ -43,8 +40,6 @@ int type_C_patch = 0;
 int arr_A[10];
 int arr_B[10];
 int arr_C[10];
-
-
 
 #define __CLI_GLOBALS_H_
 #endif

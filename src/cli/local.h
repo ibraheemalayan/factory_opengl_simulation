@@ -20,14 +20,8 @@
 #define C_EMPLOYEES_PER_LINE_IN_MANUFACTURING_PROCESS_TYPE_C 5
 
 // time limits for type A lines steps ( in microseconds )
-#define C_MIN_A 100
-#define C_MAX_A 1000
-// time limits for type B lines steps ( in microseconds )
-#define C_MIN_B 100
-#define C_MAX_B 1300
-// time limits for type C lines steps ( in microseconds )
-#define C_MIN_C 150
-#define C_MAX_C 1500
+#define C_LINE_STEP_MIN 100000
+#define C_LINE_STEP_MAX 1000000
 
 #define PATCHER_TIME 100
 

@@ -20,11 +20,18 @@ void join_all();
 int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
 void generator_routine(void *argptr);
+
+// TODELETE
 void employee_lineA(void *position);
 void employee_lineB(void *position);
 void employee_lineC(void *position);
+
+void manufacturing_line_employee(void *position);
+
 void patcher_routine(void *argptr);
 void printer_routine(void *argptr);
+
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type);
 
 //..................................new mohammad..................................
 
@@ -240,6 +247,9 @@ void initiate_mutexes()
 
 void start_simulation()
 {
+
+    printf("\n\nStarting simulation ...\n\n");
+
     create_generator_thread();
     create_employees_threads_type_A();
     create_employees_threads_type_B();
@@ -247,11 +257,9 @@ void start_simulation()
     create_patcher_employees();
     create_printer_machine();
 
-    for (int i = 0; i < 50; i++)
-        testEnqueueToPrintingQueue();
-    createThreads();
-
-    start_flag = 1;
+    // for (int i = 0; i < 4; i++)
+    //     testEnqueueToPrintingQueue();
+    // createThreads();
 }
 
 void create_generator_thread()
@@ -273,12 +281,14 @@ void create_employees_threads_type_A()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position[j][i]) == -1)
+            position[j][i].type = TYPE_A;
+
+            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee A, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -293,12 +303,13 @@ void create_employees_threads_type_B()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position[j][i]) == -1)
+            position[j][i].type = TYPE_B;
+            if (pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee B, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -313,12 +324,13 @@ void create_employees_threads_type_C()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position[j][i]) == -1)
+            position[j][i].type = TYPE_C;
+            if (pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee C, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -349,8 +361,12 @@ void create_printer_machine()
 
 void generator_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
+
+    printf("Generator thread started\n\n");
+    fflush(stdout);
+
+    printf("Generator thread started 2\n\n");
+    fflush(stdout);
     int empty_index, j, i;
 
     // initialize piles
@@ -376,7 +392,7 @@ void generator_routine(void *argptr)
         }
     }
 
-    for (i = 0; i < 100; i)
+    for (i = 0; i < 80; i)
     { // temporary because of lack of termination condition
 
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
@@ -390,7 +406,7 @@ void generator_routine(void *argptr)
                 }
                 if (type_A_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'a', j);
+                    generate_product(k, TYPE_A, j);
                 }
                 if (pthread_mutex_unlock(&A_pile_mutex[j][k]) == -1)
                 {
@@ -398,6 +414,8 @@ void generator_routine(void *argptr)
                     exit(1);
                 }
             }
+
+            usleep(1000);
         }
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEB; j++)
         {
@@ -410,8 +428,7 @@ void generator_routine(void *argptr)
                 }
                 if (type_B_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'b', j);
-                    count++;
+                    generate_product(k, TYPE_B, j);
                 }
                 if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1)
                 {
@@ -420,9 +437,6 @@ void generator_routine(void *argptr)
                 }
             }
         }
-        // printf("exited\n");
-        if (count > 50)
-            break;
 
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEC; j++)
         {
@@ -435,7 +449,7 @@ void generator_routine(void *argptr)
                 }
                 if (type_C_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'c', j);
+                    generate_product(k, TYPE_C, j);
                 }
                 if (pthread_mutex_unlock(&C_pile_mutex[j][k]) == -1)
                 {
@@ -447,219 +461,336 @@ void generator_routine(void *argptr)
     }
 }
 
-void employee_lineA(void *position)
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type)
 {
-    employee_information *temp = (employee_information *)position;
-    int linenum = temp->linenum;
-    int index = temp->index;
-    int f = 0;
+
     message_buf buf;
     buf.mtype = 1;
-    buf.payload.chocolate_type = TYPE_A;
-    buf.payload.msg_type = 1;
-    buf.payload.item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
-    if (index > 7 || linenum > 2)
-    {
-        perror("error with passing argument");
-        clean_up();
-        exit(1);
-    }
-    // printf("index : %d, linenum : %d\n", index, linenum);
 
-    switch (linenum)
-    {
-    case 0:
-        buf.payload.current_location = MANUFACTURING_LINE_A1;
-        break;
-    case 1:
-        buf.payload.current_location = MANUFACTURING_LINE_A2;
-        break;
-    }
+    buf.payload.msg_type = msg_type;
+    buf.payload.id = id;
     buf.payload.index = index;
+    buf.payload.current_location = location;
+    buf.payload.chocolate_type = chocolate_type;
+    buf.payload.item_type = item_type;
 
-    int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeA[linenum][index]);
-    int step_time = (C_MIN_A + rand()) % C_MAX_A;
-    while (1)
-    {
+    memset(buf.payload.ids_to_delete, 0, MAX_BOXES_PER_TRUCK);
 
-        i = find_product(type_A_pile[linenum], i);
-        if (i != PILESIZE)
-        {
-            if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0)
-            {
-                if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1')))
-                {
-                    type_A_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    usleep(step_time);
-                    if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0)
-                    {
-                        buf.payload.id = type_A_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_A_pile[linenum][i].id = 0;
-                        f++;
-                    }
-                }
-                pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
-            }
-        }
-        i = (i + 1) % PILESIZE;
-        j++;
-        if (count >= 50)
-        {
-            break;
-        }
-    }
-    if (f != 0)
-        printf("A %d: %d items passed through this line\n", index, f);
+    buf.payload.index_in_queue = 0; // to suppress uninitialized warning
+
+    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
 }
 
-void employee_lineB(void *position)
+void send_product_msg_to_ui_with_delete(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type, int arr[], int arr_size)
 {
-    employee_information *temp = (employee_information *)position;
-    int linenum = temp->linenum;
-    int index = temp->index;
-    int f = 0;
+
     message_buf buf;
     buf.mtype = 1;
-    buf.payload.chocolate_type = TYPE_B;
-    buf.payload.msg_type = 1;
-    buf.payload.item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
-    if (index > 5 || linenum > 1)
-    {
-        perror("error with passing argument");
-        clean_up();
-        exit(1);
-    }
 
-    switch (linenum)
-    {
-    case 0:
-        buf.payload.current_location = MANUFACTURING_LINE_B1;
-        break;
-    case 1:
-        buf.payload.current_location = MANUFACTURING_LINE_B2;
-        break;
-    }
+    
+    buf.payload.msg_type = msg_type;
+    buf.payload.id = id;
     buf.payload.index = index;
+    buf.payload.current_location = location;
+    buf.payload.chocolate_type = chocolate_type;
+    buf.payload.item_type = PRODUCT;
+    for (int i = 0; i <  arr_size; i++)
+        buf.payload.ids_to_delete[i] = arr[i];
 
-    int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeB[linenum][index]);
-    int step_time = (C_MIN_B + rand()) % C_MAX_B;
-    while (1)
-    {
+    buf.payload.index_in_queue = 0; // to suppress uninitialized warning
 
-        i = find_product(type_B_pile[linenum], i);
-        if (i != PILESIZE)
-        {
-            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0)
-            {
-
-                if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1'))
-                {
-                    type_B_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    usleep(step_time);
-                    if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0)
-                    {
-                        buf.payload.id = type_B_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_B_pile[linenum][i].id = 0;
-                        f++;
-                    }
-                }
-                pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
-            }
-        }
-        i = (i + 1) % PILESIZE;
-        j++;
-        if (count >= 50)
-        {
-            break;
-        }
-    }
-    if (f != 0)
-        printf("B %d: %d items passed through this line\n", index, f);
+    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
 }
 
-void employee_lineC(void *position)
+// void employee_lineA(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 7 || linenum > 2)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_A1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeA[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     // printf("%d %d\n", linenum, index);
+//     while (1)
+//     {
+
+//         i = find_product(type_A_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0)
+//             {
+//                 if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1')))
+//                 {
+
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_A_pile[linenum][i].id, TYPE_A, current_location, index);
+//                     type_A_pile[linenum][i].progress[index] = '1';
+
+//                     usleep(step_time);
+//                     if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_A;
+//                         buf.payload.chocolate_type = TYPE_A;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_A_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_A_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("A %d: %d items passed through this line\n", index, f);
+// }
+
+// void employee_lineB(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 5 || linenum > 1)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_B1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeB[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     while (1)
+//     {
+
+//         i = find_product(type_B_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0)
+//             {
+
+//                 if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1'))
+//                 {
+//                     type_B_pile[linenum][i].progress[index] = '1';
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_B_pile[linenum][i].id, TYPE_B, current_location, index);
+//                     usleep(step_time);
+//                     if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_B;
+//                         buf.payload.chocolate_type = TYPE_B;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_B_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_B_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("B %d: %d items passed through this line\n", index, f);
+// }
+
+// void employee_lineC(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 5 || linenum > 1)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_C1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeC[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     while (1)
+//     {
+
+//         i = find_product(type_C_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0)
+//             {
+//                 if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1')))
+//                 {
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_C_pile[linenum][i].id, TYPE_C, current_location, index);
+
+//                     type_C_pile[linenum][i].progress[index] = '1';
+//                     usleep(step_time);
+//                     if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_C;
+//                         buf.payload.chocolate_type = TYPE_C;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_C_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_C_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("C %d: %d items passed through this line\n", index, f);
+// }
+
+void manufacturing_line_employee(void *position)
 {
     employee_information *temp = (employee_information *)position;
     int linenum = temp->linenum;
     int index = temp->index;
+    ChocolateType type = temp->type;
     int f = 0;
-    message_buf buf;
-    buf.mtype = 1;
-    buf.payload.chocolate_type = TYPE_C;
-    buf.payload.msg_type = 1;
-    buf.payload.item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
-    if (index > 5 || linenum > 1)
+
+    if (type == TYPE_A && (index > 7 || linenum > 2))
     {
-        perror("error with passing argument");
+        perror("error passing argument for type A employee");
         clean_up();
         exit(1);
     }
-
-    switch (linenum)
+    else if (type == TYPE_B && (index > 5 || linenum > 1))
     {
-    case 0:
-        buf.payload.current_location = MANUFACTURING_LINE_C1;
+        perror("error passing argument for type B employee");
+        clean_up();
+        exit(1);
+    }
+    else if (type == TYPE_C && (index > 5 || linenum > 1))
+    {
+        perror("error passing argument for type C employee");
+        clean_up();
+        exit(1);
+    }
+    chocolateProduct *array_ptr;
+    pthread_mutex_t *pile_mutex;
+    Location current_location;
+    char done_string[8];
+    switch (type)
+    {
+    case TYPE_A:
+        current_location = MANUFACTURING_LINE_A1 + linenum ;
+        array_ptr = type_A_pile[linenum];
+        pile_mutex = A_pile_mutex[linenum];
+        snprintf(done_string,8,"11111111");
         break;
-    case 1:
-        buf.payload.current_location = MANUFACTURING_LINE_C2;
+    case TYPE_B:
+        current_location = MANUFACTURING_LINE_B1 + linenum;
+        array_ptr = type_B_pile[linenum];
+        pile_mutex = B_pile_mutex[linenum];
+        snprintf(done_string,8,"11111100");
+        break;
+    case TYPE_C:
+        current_location = MANUFACTURING_LINE_C1 + linenum;
+        array_ptr = type_C_pile[linenum];
+        pile_mutex = C_pile_mutex[linenum];
+        snprintf(done_string,8,"11111000");
+        break;
+    default:
+        perror("UNEXCPECTED TYPE: manufacturing_line_employee");
+        exit(4);
         break;
     }
-    buf.payload.index = index;
+
 
     int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeC[linenum][index]);
-    int step_time = (C_MIN_C + rand()) % C_MAX_C;
+    srand(pthread_self());
+    int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+    MsgType m_type = (index == 0)? OBJECT_CREATED:OBJECT_MOVED;
     while (1)
     {
 
-        i = find_product(type_C_pile[linenum], i);
+        i = find_product(array_ptr, i);
         if (i != PILESIZE)
         {
-            if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0)
+            if (pthread_mutex_trylock(&pile_mutex[i]) == 0)
             {
-                if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1')))
+                if (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))
                 {
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    type_C_pile[linenum][i].progress[index] = '1';
+                    send_product_msg_to_ui(
+                        m_type, array_ptr[i].id, type, current_location, index, PRODUCT);
+
+                    array_ptr[i].progress[index] = '1';
                     usleep(step_time);
-                    if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0)
+                    if (strcmp(array_ptr[i].progress, done_string) == 0)
                     {
-                        buf.payload.id = type_C_pile[linenum][i].id;
+                        // send to patcher
+                        message_buf buf;
+                        buf.mtype = 1;
+                        buf.payload.msg_type = OBJECT_MOVED;
+                        buf.payload.index = index;
+                        buf.payload.current_location = PATCHING_A + type - 1;
+                        buf.payload.chocolate_type = type;
+                        buf.payload.item_type = PRODUCT;
+                        buf.payload.id = array_ptr[i].id;
                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_C_pile[linenum][i].id = 0;
+                        send_product_msg_to_ui(
+                            buf.payload.msg_type, array_ptr[i].id, type, buf.payload.current_location, index, PATCH);
+                        array_ptr[i].id = 0;
                         f++;
                     }
                 }
-                pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+                pthread_mutex_unlock(&pile_mutex[i]);
             }
         }
         i = (i + 1) % PILESIZE;
         j++;
-        if (count >= 50)
-        {
-            break;
-        }
     }
     if (f != 0)
-        printf("C %d: %d items passed through this line\n", index, f);
+        printf("type:%d | %d: %d items passed through this employee\n", type, index, f);
 }
 
 void patcher_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
+    // return;
     int j = 0;
     int o = 0;
     message_buf buf;
@@ -669,96 +800,12 @@ void patcher_routine(void *argptr)
 
     while (1)
     {
-        if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
-        {
-        }
-        else
-        {
-            buf.mtype = 1;
-            switch (buf.payload.chocolate_type)
-            {
-            case TYPE_A:
-                buf.payload.current_location = PATCHING_A;
-                break;
-            case TYPE_B:
-                buf.payload.current_location = PATCHING_B;
-                break;
-            case TYPE_C:
-                buf.payload.current_location = PATCHING_C;
-                break;
-            }
-            send.payload.current_location = buf.payload.current_location;
-            msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-
-            if (buf.payload.chocolate_type == TYPE_A)
-            {
-                pthread_mutex_lock(&patch_mutex_A);
-                arr_A[type_A_patch] = buf.payload.id;
-                type_A_patch++;
-                if (type_A_patch == 10)
-                {
-                    type_A_patch = 0;
-                    send.payload.chocolate_type = TYPE_A;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_A[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_A);
-            }
-            else if (buf.payload.chocolate_type == TYPE_B)
-            {
-                pthread_mutex_lock(&patch_mutex_B);
-                type_B_patch++;
-                arr_B[type_B_patch] = buf.payload.id;
-                if (type_B_patch == 10)
-                {
-                    type_B_patch = 0;
-                    send.payload.chocolate_type = TYPE_B;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_B[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_B);
-            }
-            else if (buf.payload.chocolate_type == TYPE_C)
-            {
-                pthread_mutex_lock(&patch_mutex_C);
-                type_C_patch++;
-                arr_C[type_C_patch] = buf.payload.id;
-                if (type_C_patch == 10)
-                {
-                    type_C_patch = 0;
-                    send.payload.chocolate_type = TYPE_C;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_C[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_C);
-            }
-        }
-        j++;
-        if (j == 1000) // termination condition
-            break;
     }
-    pthread_exit(0);
 }
 
 void printer_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
+    // TODO set the
     int j = 0;
     message_buf buf;
     while (1)
@@ -769,6 +816,7 @@ void printer_routine(void *argptr)
         else
         {
             printf("printer received msg\n");
+            buf.payload.item_type = PATCH;
             buf.payload.current_location = PRINTER;
             msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
             for (int i = 0; i < 10; i++)
@@ -968,12 +1016,6 @@ void load_user_defined_values()
     fclose(fp);
 }
 
-//..................................new mohammad..................................
-
-/*Noor : use this function with the two threads:
- "The chocolate products that are produced by all the manufacturing lines are collected in patches of 10 pieces per type by 2 employees"
- Hint 1 :each thread form these two threads should at first fillThePatche then enqueuToPrinterQueue  */
-
 void enqueueToQueue(message_payload chocolateInfo, pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, struct chocolateNode **RearQueue, int *numberOfchocolateItemInQueueTypeT)
 {
     pthread_mutex_lock(mutex);
@@ -1078,15 +1120,15 @@ void displyStorageAreaQueueA()
     struct chocolateNode *temp = NULL;
     if ((FrontStoragAreaTypeAQueue == NULL))
     {
-        printf("\n\nStorage Area Queue A is Empty\n");
+        printf("\nStorage Area Queue A is Empty\n");
     }
     else
     {
-        printf("\n\nStorage Area Queue A is :\n\n");
+        printf("\nStorage Area Queue A is :\n");
         temp = FrontStoragAreaTypeAQueue;
         while (temp)
         {
-            printf("\n\nlocation in Storage Area Queue A:  %d  type: %d   id:%d\n\n", temp->chocolateInfo.current_location, temp->chocolateInfo.chocolate_type, temp->chocolateInfo.id);
+            printf("\nlocation in Storage Area Queue A:  %d  type: %d   id:%d\n", temp->chocolateInfo.current_location, temp->chocolateInfo.chocolate_type, temp->chocolateInfo.id);
             temp = temp->next;
         }
     }
@@ -1582,8 +1624,8 @@ void createThreads()
     pthread_create(&p_thread10, NULL, (void *)insertToTrucks, NULL);
 
     // creatr Thread For Print
-    pthread_t p_thread11;
-    pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
+    // pthread_t p_thread11;
+    // pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
 
     pthread_join(p_thread1, NULL);
     pthread_join(p_thread2, NULL);
@@ -1595,5 +1637,5 @@ void createThreads()
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
-    pthread_join(p_thread11, NULL);
+    // pthread_join(p_thread11, NULL);
 }

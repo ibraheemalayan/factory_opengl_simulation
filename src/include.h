@@ -27,7 +27,7 @@
 #define PERSON 1L
 #define PILESIZE 10
 
-#define MAX_BOXES_PER_TRUCK 15
+#define MAX_BOXES_PER_TRUCK 18 // keep it even number
 
 enum ItemType
 {
@@ -108,7 +108,7 @@ typedef enum MsgType MsgType;
 
 struct message_payload
 {
-  long msg_type; // first field of the message struct should be the message type
+  MsgType msg_type; // first field of the message struct should be the message type
   int id;
   int index; // index if inside a queue
   Location current_location;
@@ -161,6 +161,7 @@ typedef struct message_buf message_buf;
 typedef struct employee_information
 {
   int linenum;
+  ChocolateType type;
   int index;
 
 } employee_information;
