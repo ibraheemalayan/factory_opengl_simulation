@@ -121,7 +121,7 @@ int read_and_handle_msg_queue(HashTable *ht)
     message_buf message_queue_buffer;
 
     // msg_type set to Zero to read the first message in the queue regarless of it its type
-    if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
+    if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), MTYPE, IPC_NOWAIT | MSG_NOERROR) == -1)
     {
         if (errno == ENOMSG)
         {
@@ -218,6 +218,14 @@ int read_and_handle_msg_queue(HashTable *ht)
     {
         ItemObj *it = ht_search(ht, message_queue_buffer.payload.id);
         LocationObject *current_location = locations_ptrs[message_queue_buffer.payload.current_location];
+
+        if (it == NULL)
+        {
+            red_stdout();
+            printf("ERROR: item %d of type %d tried to moved but it does not exist in the hash table\n", message_queue_buffer.payload.id, message_queue_buffer.payload.chocolate_type);
+            reset_stdout();
+            return 1;
+        }
 
         if (message_queue_buffer.payload.current_location < it->location_index || (it->location_index > B2_MANUFACTURING_LINE_Y_VALUE && message_queue_buffer.payload.index < it->index_in_queue))
         {

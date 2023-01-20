@@ -4,13 +4,13 @@
 #include "./structs.h"
 #include "../include.h"
 
-ItemObj *items[500];
+#define CAPACITY 2000 // Size of the Hash Table
+
+ItemObj *items[CAPACITY];
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define CAPACITY 1000 // Size of the Hash Table
 
 unsigned long hash_function(int k)
 {

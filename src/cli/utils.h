@@ -9,6 +9,10 @@ int ui_msgq_id;
 int patcher_msgq_id;
 int printer_msgq_id;
 
+chocolateProduct type_A_pile[C_MANUFACTURING_LINES_TYPEA][PILESIZE * 2];
+chocolateProduct type_B_pile[C_MANUFACTURING_LINES_TYPEB][PILESIZE * 2];
+chocolateProduct type_C_pile[C_MANUFACTURING_LINES_TYPEC][PILESIZE * 2];
+
 void run_gui();                                                          // runs the gui
 void create_and_setup_message_queues();                                  // creates the message queue
 void clean_up();                                                         // cleans up the message queues, and kills the gui and all children
@@ -78,10 +82,17 @@ void create_and_setup_message_queues()
 
     // remove queue if exists
     remove("ui_queue.bin");
+    remove("patcher_queue.bin");
+    remove("printer_queue.bin");
 
     // create file to use as message queue key
     system("touch ui_queue.bin");
+    system("touch patcher_queue.bin");
+    system("touch printer_queue.bin");
+
     system("chmod 666 ui_queue.bin");
+    system("chmod 666 patcher_queue.bin");
+    system("chmod 666 printer_queue.bin");
 
     if ((ui_queue_key = ftok("ui_queue.bin", 30)) == -1)
     {
@@ -90,14 +101,14 @@ void create_and_setup_message_queues()
         exit(1);
     }
 
-    if ((patcher_queue_key = ftok("ui_queue.bin", 30)) == -1)
+    if ((patcher_queue_key = ftok("patcher_queue.bin", 31)) == -1)
     {
         perror("ftok");
         clean_up();
         exit(1);
     }
 
-    if ((printer_queue_key = ftok("ui_queue.bin", 30)) == -1)
+    if ((printer_queue_key = ftok("printer_queue.bin", 32)) == -1)
     {
         perror("ftok");
         clean_up();
@@ -115,7 +126,7 @@ void create_and_setup_message_queues()
     patcher_msgq_id = msgget(patcher_queue_key, 0666 | IPC_CREAT);
     if (patcher_queue_key == -1)
     {
-        perror("msgget ui queue");
+        perror("msgget patcher queue");
         clean_up();
         exit(2);
     }
@@ -123,7 +134,7 @@ void create_and_setup_message_queues()
     printer_msgq_id = msgget(printer_queue_key, 0666 | IPC_CREAT);
     if (printer_queue_key == -1)
     {
-        perror("msgget ui queue");
+        perror("msgget printer queue");
         clean_up();
         exit(2);
     }
@@ -171,7 +182,7 @@ void create_and_setup_message_queues()
     msgctl(printer_msgq_id, IPC_SET, &printer_queue_info);
 
     green_stdout();
-    printf("UI message queues have been created\n");
+    printf("Message queues have been created\n");
     reset_stdout();
 }
 
@@ -195,6 +206,8 @@ void clean_up()
 
     // remove the queue file
     remove("ui_queue.bin");
+    remove("patcher_queue.bin");
+    remove("printer_queue.bin");
 }
 
 void interrupt_sig_handler(int sig)

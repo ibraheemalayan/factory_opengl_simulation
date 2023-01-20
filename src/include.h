@@ -24,7 +24,7 @@
 #include "std.h"
 
 #define UISIG 7
-#define PERSON 1L
+#define MTYPE 1L
 #define PILESIZE 10
 
 #define MAX_BOXES_PER_TRUCK 18 // keep it even number

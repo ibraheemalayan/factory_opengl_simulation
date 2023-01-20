@@ -275,7 +275,7 @@ void update_ui(MsgType msg_type)
 
     message_buf buf;
 
-    buf.mtype = PERSON;
+    buf.mtype = MTYPE;
 
     buf.payload.msg_type = msg_type;
     buf.payload.person_pid = my_pid;

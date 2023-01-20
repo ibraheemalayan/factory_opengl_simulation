@@ -97,16 +97,16 @@ void draw_item(ItemObj *item)
     switch (item->pkg_type)
     {
     case PRODUCT:
-        drawFilledCircle(item->current_coords.x, item->current_coords.y, 15, color[0], color[1], color[2]);
+        drawFilledCircle(item->current_coords.x, item->current_coords.y, 10, color[0], color[1], color[2]);
         break;
 
     case PATCH:
         glBegin(GL_TRIANGLES);
         // glColor3ubv(color);
         glColor3ub(color[0], color[1], color[2]);
-        glVertex2f(item->current_coords.x + 15, item->current_coords.y - 15);
-        glVertex2f(item->current_coords.x - 15, item->current_coords.y - 15);
-        glVertex2f(item->current_coords.x, item->current_coords.y + 15);
+        glVertex2f(item->current_coords.x + 20, item->current_coords.y - 20);
+        glVertex2f(item->current_coords.x - 20, item->current_coords.y - 20);
+        glVertex2f(item->current_coords.x, item->current_coords.y + 20);
         glEnd();
         break;
 
