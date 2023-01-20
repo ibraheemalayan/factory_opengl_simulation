@@ -32,6 +32,7 @@ struct ItemObj
 
     int index_in_queue;
     LocationObject *current_location;
+    Location location_index;
 };
 typedef struct ItemObj ItemObj;
 

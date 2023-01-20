@@ -133,6 +133,9 @@ int read_and_handle_msg_queue(HashTable *ht)
         exit(3);
     }
 
+    // printf("received message:\n\n");
+    // print_message(&(message_queue_buffer.payload));
+
     printf("received message:\n\n");
     print_message(&(message_queue_buffer.payload));
 
@@ -146,7 +149,8 @@ int read_and_handle_msg_queue(HashTable *ht)
             message_queue_buffer.payload.index,
             message_queue_buffer.payload.item_type,
             message_queue_buffer.payload.chocolate_type,
-            current_location);
+            current_location,
+            message_queue_buffer.payload.current_location);
 
         // printf(
         //     "created item with id: %d, index: %d, item_type: %d, chocolate_type: %d, current_location: %d\n\n",
@@ -210,10 +214,19 @@ int read_and_handle_msg_queue(HashTable *ht)
         ItemObj *it = ht_search(ht, message_queue_buffer.payload.id);
         LocationObject *current_location = locations_ptrs[message_queue_buffer.payload.current_location];
 
+        if (message_queue_buffer.payload.current_location < it->location_index || (it->location_index > B2_MANUFACTURING_LINE_Y_VALUE && message_queue_buffer.payload.index < it->index_in_queue))
+        {
+            red_stdout();
+            printf("ERROR: item %d moved backwards in a queue other than A/B lines\n", it->id);
+            reset_stdout();
+            return 1;
+        }
+
         if (it->current_location != current_location)
         {
             it->current_location->current_items--;
             it->current_location = current_location;
+            it->location_index = message_queue_buffer.payload.current_location;
             current_location->current_items++;
 
             if (message_queue_buffer.payload.current_location >= TRUCK_1 || message_queue_buffer.payload.current_location <= TRUCK_3)
@@ -221,6 +234,7 @@ int read_and_handle_msg_queue(HashTable *ht)
                 it->index_in_queue = 0;
             }
         }
+
         it->index_in_queue = message_queue_buffer.payload.index;
 
         it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
@@ -300,7 +314,7 @@ void create_random_items(LocationObject *locations[])
 
         LocationObject *q = locations[rand_queue_index];
 
-        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q);
+        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q, rand_queue_index);
 
         item_obj->destination_coords = get_queue_location_coords_for_index(q, item_obj->index_in_queue);
 
