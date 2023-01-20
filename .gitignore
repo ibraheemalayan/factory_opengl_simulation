@@ -5,6 +5,8 @@ src/bin/*.o
 
 *.bin
 
+*errorlog
+
 # Prerequisites
 *.d
 
