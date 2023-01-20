@@ -257,9 +257,9 @@ void start_simulation()
     create_patcher_employees();
     create_printer_machine();
 
-    // for (int i = 0; i < 4; i++)
-    //     testEnqueueToPrintingQueue();
-    // createThreads();
+    for (int i = 0; i < 4; i++)
+        testEnqueueToPrintingQueue();
+    createThreads();
 }
 
 void create_generator_thread()
@@ -610,67 +610,67 @@ void manufacturing_line_employee(void *position)
 
 void patcher_routine(void *argptr)
 {
-    // // return;
-    int j = 0;
-    int o = 0;
-    message_buf buf;
-    int *patch_counter;
-    int *arr_to_delete;
-    int *patch_id;
-    pthread_mutex_t *patch_mutex;
-    Location current_location;
+    // // // return;
+    // int j = 0;
+    // int o = 0;
+    // message_buf buf;
+    // int *patch_counter;
+    // int *arr_to_delete;
+    // int *patch_id;
+    // pthread_mutex_t *patch_mutex;
+    // Location current_location;
 
 
 
-    while (1)
-    {
-        if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) != -1){
+    // while (1)
+    // {
+    //     if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) != -1){
             
-            switch(buf.payload.chocolate_type){
-                case TYPE_A:
-                    patch_counter = &type_A_patch;
-                    arr_to_delete = arr_A;
-                    current_location = PATCHING_A;
-                    patch_id = &patch_id_A;
-                    patch_mutex = &patch_mutex_A;
-                    break;
-                case TYPE_B:
-                    patch_counter = &type_B_patch;
-                    arr_to_delete = arr_B;
-                    current_location = PATCHING_B;
-                    patch_id = &patch_id_B;
-                    patch_mutex = &patch_mutex_B;
-                    break;
-                case TYPE_C:
-                    patch_counter = &type_C_patch;
-                    arr_to_delete = arr_C;
-                    current_location = PATCHING_C;
-                    patch_id = &patch_id_C;
-                    patch_mutex = &patch_mutex_C;
-                    break;
-                default:
-                    perror("UNEXCPECTED TYPE: patcher");
-                    exit(4);
-                    break;
-        }
-        pthread_mutex_lock(patch_mutex);
-        arr_to_delete[*patch_counter] = buf.payload.id;
-        *patch_counter = (*patch_counter+1)%10;
+    //         switch(buf.payload.chocolate_type){
+    //             case TYPE_A:
+    //                 patch_counter = &type_A_patch;
+    //                 arr_to_delete = arr_A;
+    //                 current_location = PATCHING_A;
+    //                 patch_id = &patch_id_A;
+    //                 patch_mutex = &patch_mutex_A;
+    //                 break;
+    //             case TYPE_B:
+    //                 patch_counter = &type_B_patch;
+    //                 arr_to_delete = arr_B;
+    //                 current_location = PATCHING_B;
+    //                 patch_id = &patch_id_B;
+    //                 patch_mutex = &patch_mutex_B;
+    //                 break;
+    //             case TYPE_C:
+    //                 patch_counter = &type_C_patch;
+    //                 arr_to_delete = arr_C;
+    //                 current_location = PATCHING_C;
+    //                 patch_id = &patch_id_C;
+    //                 patch_mutex = &patch_mutex_C;
+    //                 break;
+    //             default:
+    //                 perror("UNEXCPECTED TYPE: patcher");
+    //                 exit(4);
+    //                 break;
+    //     }
+    //     pthread_mutex_lock(patch_mutex);
+    //     arr_to_delete[*patch_counter] = buf.payload.id;
+    //     *patch_counter = (*patch_counter+1)%10;
 
-        if (*patch_counter == 1){
-            *patch_id = generate_uniq_id();
-            send_product_msg_to_ui(OBJECT_CREATED, *patch_id, buf.payload.chocolate_type, current_location, 0, PATCH);
-        }
-        else if (*patch_counter == 10)
-            send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, PRINTER, 0, PATCH,arr_to_delete,10);
+    //     if (*patch_counter == 1){
+    //         *patch_id = generate_uniq_id();
+    //         send_product_msg_to_ui(OBJECT_CREATED, *patch_id, buf.payload.chocolate_type, current_location, 0, PATCH);
+    //     }
+    //     else if (*patch_counter == 10)
+    //         send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, PRINTER, 0, PATCH,arr_to_delete,10);
         
-        pthread_mutex_unlock(patch_mutex);
+    //     pthread_mutex_unlock(patch_mutex);
 
-        }
+    //     }
 
-            usleep(10000);
+    //         usleep(10000);
 
-    }
+    // }
 }
 
 void printer_routine(void *argptr)
