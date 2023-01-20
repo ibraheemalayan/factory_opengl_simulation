@@ -235,7 +235,7 @@ int find_product(chocolateProduct arr[], int start)
 
 void generate_product(int empty_index, ChocolateType type, int linenum)
 {
-    char progress[8] = "00000000";
+    char progress[9] = "00000000";
 
     chocolateProduct *array_ptr;
 
@@ -257,7 +257,7 @@ void generate_product(int empty_index, ChocolateType type, int linenum)
 
     array_ptr[empty_index].id = generate_uniq_id();
 
-    snprintf(array_ptr[empty_index].progress, 8, "%s", progress);
+    snprintf(array_ptr[empty_index].progress, 9, "%s", progress);
     array_ptr[empty_index].type = type;
 }
 

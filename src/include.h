@@ -144,7 +144,7 @@ typedef struct message_payload message_payload;
 struct Object
 {
   ChocolateType type;
-  char progress[8];
+  char progress[9];
   int id;
   Location current_location;
 };
