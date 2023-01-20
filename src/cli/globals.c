@@ -23,9 +23,9 @@ int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC = 0
 int g_time_to_end_simulation_in_minutes = 0;
 
 int id_counter = 1;
-unsigned int patch_id_A = 200000;
-unsigned int patch_id_B = 300000;
-unsigned int patch_id_C = 400000;
+int patch_id_A = 200000;
+int patch_id_B = 300000;
+int patch_id_C = 400000;
 
 chocolateProduct type_A_pile[C_MANUFACTURING_LINES_TYPEA][PILESIZE];
 
@@ -40,6 +40,7 @@ int type_C_patch = 0;
 int arr_A[10];
 int arr_B[10];
 int arr_C[10];
+
 
 #define __CLI_GLOBALS_H_
 #endif
