@@ -39,7 +39,6 @@ void setup_message_queue()
     }
 }
 
-
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
 void paint_and_swap_frame()
@@ -116,7 +115,6 @@ void update_moving_items_locations()
     }
 }
 
-
 int read_and_handle_msg_queue(HashTable *ht)
 {
     message_buf message_queue_buffer;
@@ -137,13 +135,13 @@ int read_and_handle_msg_queue(HashTable *ht)
     // printf("received message:\n\n");
     // print_message(&(message_queue_buffer.payload));
 
-    // if (message_queue_buffer.payload.chocolate_type == TYPE_A && message_queue_buffer.payload.current_location > PATCHING_A)
-    // {
-    //     red_stdout();
-    //     printf("an invalid message: [type A in B queues]\n\n");
-    //     print_message(&(message_queue_buffer.payload));
-    //     reset_stdout();
-    // }
+    if (message_queue_buffer.payload.item_type == CARTON_BOX)
+    {
+        red_stdout();
+        print_message(&(message_queue_buffer.payload));
+        printf("\n ids_to_delete : [%d, %d]", message_queue_buffer.payload.ids_to_delete[0], message_queue_buffer.payload.ids_to_delete[1]);
+        reset_stdout();
+    }
 
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {
@@ -171,6 +169,7 @@ int read_and_handle_msg_queue(HashTable *ht)
             int num_of_ids = (message_queue_buffer.payload.item_type == CARTON_BOX) ? 2 : 10;
             for (int i = 0; i < num_of_ids; i++)
             {
+                printf("deleting id: %d", message_queue_buffer.payload.ids_to_delete[i]);
                 ht_delete(ht, message_queue_buffer.payload.ids_to_delete[i]);
             }
         }
@@ -272,7 +271,6 @@ void recursive_timed_update(int time)
         // keep reading messgaes until queue is empty
     }
 
-
     update_moving_items_locations();
     update_truck_locations();
 
@@ -365,13 +363,9 @@ int main(int argc, char **argv)
 
     ht = create_table(CAPACITY);
 
-    //create_random_items(locations_ptrs);
-
-
+    // create_random_items(locations_ptrs);
 
     setup_message_queue();
-
-
 
     glutMainLoop(); // Enter the event-processing loop
 
