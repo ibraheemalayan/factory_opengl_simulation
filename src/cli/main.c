@@ -1511,7 +1511,7 @@ void insertToStorageArea()
             // Todo update index And Location to ui
             chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontFillingTheCartonBoxesTypeBQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB);
             chocolate.current_location = STORAGE_AREA;
-            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 0, chocolate.item_type);
+            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 1, chocolate.item_type);
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[1], &FrontStoragAreaTypeBQueue, &RearStoragAreaTypeBQueue, &G_numberOfChocolateBoxsInStorageAreaTypeB);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[1]);
@@ -1524,7 +1524,7 @@ void insertToStorageArea()
             // Todo update index And Location to ui
             chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontFillingTheCartonBoxesTypeCQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC);
             chocolate.current_location = STORAGE_AREA;
-            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 0, chocolate.item_type);
+            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 2, chocolate.item_type);
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[2], &FrontStoragAreaTypeCQueue, &RearStoragAreaTypeCQueue, &G_numberOfChocolateBoxsInStorageAreaTypeC);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
