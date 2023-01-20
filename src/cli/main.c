@@ -16,6 +16,8 @@ void create_employees_threads_type_B();
 void create_employees_threads_type_C();
 void create_patcher_employees();
 void create_printer_machine();
+void kill_after_n_minutes();
+void check_conditions_for_simulation_termination();
 void join_all();
 int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
@@ -87,6 +89,8 @@ struct chocolateNode *RearTruckQueue2 = NULL;
 struct chocolateNode *FrontTruckQueue3 = NULL;
 struct chocolateNode *RearTruckQueue3 = NULL;
 
+long ids_of_A_employees[24];
+
 // Mutex on printing Queue
 pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -101,6 +105,8 @@ pthread_mutex_t G_mutexs_for_StorageArea_Queues[3] = {PTHREAD_MUTEX_INITIALIZER,
 
 // Mutex on Trucks queues // index 0:1, 1:2, 2:3
 pthread_mutex_t G_mutexs_on_Trucks_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+
+long queue_sizes[20];
 
 int G_numberOfchocolatePatchesInPrintingQueue = 0;
 
@@ -130,6 +136,14 @@ int G_numberOfChocolateBoxsIn_Truck3 = 0;
 
 int G_Trucks_Order = 1; // 1:2:3
 int G_round = 0;
+
+pthread_mutex_t delivery_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int G_DELIVERED_A_BOXES = 0;
+int G_DELIVERED_B_BOXES = 0;
+int G_DELIVERED_C_BOXES = 0;
+
+long queue_ptrs_s[20];
 
 message_payload dequeueNodeFromQueueNoInternalMutex(struct chocolateNode **FrontQueue, int *numberOfchocolateItemInQueueTypeT);
 message_payload dequeueNodeFromQueueWithInternalMutex(pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, int *numberOfchocolateItemInQueueTypeT);
@@ -676,9 +690,7 @@ void patcher_routine(void *argptr)
             buf.payload.id = *patch_id;
             send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, current_location, 3, PATCH, arr_to_delete, 10);
             msgsnd(printer_msgq_id, &buf, sizeof(buf), 0);
-
         }
-
 
         pthread_mutex_unlock(patch_mutex);
     }
@@ -719,7 +731,6 @@ void printer_routine(void *argptr)
             send_product_msg_to_ui(OBJECT_MOVED, buf.payload.id, buf.payload.chocolate_type, PRINTER, 3, PATCH);
 
             enqueueToQueue(buf.payload, &printingQueue_mutex, &FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
-
         }
         // j++;
         // if (j == 1000) // termination condition needed
@@ -787,7 +798,7 @@ void load_user_defined_values()
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
-            g_time_to_end_simulation_in_minutes = atoi(ptr);
+            G_MINUTES_TO_END = atoi(ptr);
         }
         else if (lineNumber == 2)
         {
@@ -796,7 +807,7 @@ void load_user_defined_values()
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
-            g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeA = atoi(ptr);
+            G_BOXES_TO_END_OF_TYPE_A = atoi(ptr);
         }
         else if (lineNumber == 3)
         {
@@ -805,7 +816,7 @@ void load_user_defined_values()
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
-            g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeB = atoi(ptr);
+            G_BOXES_TO_END_OF_TYPE_B = atoi(ptr);
         }
         else if (lineNumber == 4)
         {
@@ -814,7 +825,7 @@ void load_user_defined_values()
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
-            g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC = atoi(ptr);
+            G_BOXES_TO_END_OF_TYPE_C = atoi(ptr);
         }
         else if (lineNumber == 5)
         {
@@ -1539,6 +1550,11 @@ void createThreads()
     pthread_t p_thread10;
     pthread_create(&p_thread10, NULL, (void *)insertToTrucks, NULL);
 
+    pthread_t p_thread11;
+    pthread_create(&p_thread11, NULL, (void *)check_conditions_for_simulation_termination, NULL);
+    pthread_t p_thread12;
+    pthread_create(&p_thread12, NULL, (void *)kill_after_n_minutes, NULL);
+
     // creatr Thread For Print
     // pthread_t p_thread11;
     // pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
@@ -1553,5 +1569,34 @@ void createThreads()
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
+    pthread_join(p_thread11, NULL);
+    pthread_join(p_thread12, NULL);
     // pthread_join(p_thread11, NULL);
+}
+
+void check_conditions_for_simulation_termination()
+{
+
+    pthread_mutex_lock(&delivery_mutex);
+
+    if (G_DELIVERED_A_BOXES >= G_BOXES_TO_END_OF_TYPE_A || G_DELIVERED_B_BOXES >= G_BOXES_TO_END_OF_TYPE_B || G_DELIVERED_C_BOXES >= G_BOXES_TO_END_OF_TYPE_C)
+    {
+        green_stdout();
+        printf("\nSimulation terminataion thresholds were reached\n");
+        reset_stdout();
+        clean_up();
+        exit(0);
+    }
+
+    pthread_mutex_unlock(&delivery_mutex);
+}
+void kill_after_n_minutes()
+{
+    sleep(G_MINUTES_TO_END * 60);
+
+    green_stdout();
+    printf("\nUser defined simulation time was reached, terminating ...\n");
+    reset_stdout();
+    clean_up();
+    exit(0);
 }

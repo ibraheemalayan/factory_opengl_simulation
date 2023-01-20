@@ -21,11 +21,11 @@ float g_time_for_shipping_the_chocolate_cartons_for_truck1 = 0;
 float g_time_for_shipping_the_chocolate_cartons_for_truck2 = 0;
 float g_time_for_shipping_the_chocolate_cartons_for_truck3 = 0;
 
-int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeA = 0;
-int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeB = 0;
-int g_number_of_carton_boxs_threshold_to_produce_to_end_simulation_for_typeC = 0;
+int G_BOXES_TO_END_OF_TYPE_A = 0;
+int G_BOXES_TO_END_OF_TYPE_B = 0;
+int G_BOXES_TO_END_OF_TYPE_C = 0;
 
-int g_time_to_end_simulation_in_minutes = 0;
+int G_MINUTES_TO_END = 0;
 
 int id_counter = 1;
 long cnt = 0;
