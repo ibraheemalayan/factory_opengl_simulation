@@ -695,29 +695,33 @@ void manufacturing_line_employee(void *position)
     chocolateProduct *array_ptr;
     pthread_mutex_t *pile_mutex;
     Location current_location = MANUFACTURING_LINE_A1 + linenum;
-
+    char done_string[8];
     switch (type)
     {
     case TYPE_A:
         current_location = MANUFACTURING_LINE_A1 + linenum;
         array_ptr = type_A_pile[linenum];
         pile_mutex = A_pile_mutex[linenum];
+        snprintf(done_string,8,"11111111");
         break;
     case TYPE_B:
         current_location = MANUFACTURING_LINE_B1 + linenum;
         array_ptr = type_B_pile[linenum];
         pile_mutex = B_pile_mutex[linenum];
+        snprintf(done_string,8,"11111100");
         break;
     case TYPE_C:
         current_location = MANUFACTURING_LINE_C1 + linenum;
         array_ptr = type_C_pile[linenum];
         pile_mutex = C_pile_mutex[linenum];
+        snprintf(done_string,8,"11111000");
         break;
     default:
         perror("UNEXCPECTED TYPE: manufacturing_line_employee");
         exit(4);
         break;
     }
+
 
     int i = 0, j = 0;
     srand(pthread_self());
@@ -737,7 +741,7 @@ void manufacturing_line_employee(void *position)
 
                     array_ptr[i].progress[index] = '1';
                     usleep(step_time);
-                    if (strcmp(array_ptr[i].progress, "11111000") == 0)
+                    if (strcmp(array_ptr[i].progress, done_string) == 0)
                     {
                         // send to patcher
                         message_buf buf;
