@@ -148,6 +148,10 @@ int read_and_handle_msg_queue(HashTable *ht)
             message_queue_buffer.payload.chocolate_type,
             current_location);
 
+        // printf(
+        //     "created item with id: %d, index: %d, item_type: %d, chocolate_type: %d, current_location: %d\n\n",
+        //     it->id, it->index_in_queue, it->pkg_type, it->chocolate_type, it->current_location);
+
         it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
 
         ht_insert(ht, it->id, it);

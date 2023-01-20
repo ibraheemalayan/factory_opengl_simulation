@@ -1,5 +1,3 @@
-/* reason for issue is with generator or employees*/
-
 #include "local.h"
 #include "utils.h"
 #include "globals.c"
@@ -242,6 +240,9 @@ void initiate_mutexes()
 
 void start_simulation()
 {
+
+    printf("\n\nStarting simulation ...\n\n");
+
     create_generator_thread();
     create_employees_threads_type_A();
     create_employees_threads_type_B();
@@ -351,8 +352,12 @@ void create_printer_machine()
 
 void generator_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
+
+    printf("Generator thread started\n\n");
+    fflush(stdout);
+
+    printf("Generator thread started 2\n\n");
+    fflush(stdout);
     int empty_index, j, i;
 
     // initialize piles
@@ -392,7 +397,8 @@ void generator_routine(void *argptr)
                 }
                 if (type_A_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'a', j);
+                    generate_product(k, TYPE_A, j);
+                    send_new_product_to_ui(type_A_pile[j][k].id, TYPE_A, MANUFACTURING_LINE_A1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&A_pile_mutex[j][k]) == -1)
                 {
@@ -412,7 +418,8 @@ void generator_routine(void *argptr)
                 }
                 if (type_B_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'b', j);
+                    generate_product(k, TYPE_B, j);
+                    send_new_product_to_ui(type_B_pile[j][k].id, TYPE_B, MANUFACTURING_LINE_B1 + j, 0);
                     count++;
                 }
                 if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1)
@@ -437,7 +444,8 @@ void generator_routine(void *argptr)
                 }
                 if (type_C_pile[j][k].id == 0)
                 {
-                    generate_product(k, 'c', j);
+                    generate_product(k, TYPE_C, j);
+                    send_new_product_to_ui(type_C_pile[j][k].id, TYPE_C, MANUFACTURING_LINE_C1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&C_pile_mutex[j][k]) == -1)
                 {
@@ -447,6 +455,20 @@ void generator_routine(void *argptr)
             }
         }
     }
+}
+
+void send_new_product_to_ui(int id, ChocolateType chocolate_type, Location location, int index)
+{
+    message_buf buf;
+    buf.mtype = 1;
+    buf.payload.id = id;
+    buf.payload.chocolate_type = chocolate_type;
+    buf.payload.msg_type = OBJECT_CREATED;
+    buf.payload.item_type = PRODUCT;
+    buf.payload.current_location = location;
+    buf.payload.index = index;
+
+    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
 }
 
 void employee_lineA(void *position)
@@ -477,9 +499,6 @@ void employee_lineA(void *position)
         break;
     case 1:
         buf.payload.current_location = MANUFACTURING_LINE_A2;
-        break;
-    case 2:
-        buf.payload.current_location = MANUFACTURING_LINE_A3;
         break;
     }
     buf.payload.index = index;
@@ -1581,8 +1600,8 @@ void createThreads()
     pthread_create(&p_thread10, NULL, (void *)insertToTrucks, NULL);
 
     // creatr Thread For Print
-    pthread_t p_thread11;
-    pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
+    // pthread_t p_thread11;
+    // pthread_create(&p_thread11, NULL, (void *)printInfo, NULL);
 
     pthread_join(p_thread1, NULL);
     pthread_join(p_thread2, NULL);
@@ -1594,5 +1613,5 @@ void createThreads()
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
-    pthread_join(p_thread11, NULL);
+    // pthread_join(p_thread11, NULL);
 }
