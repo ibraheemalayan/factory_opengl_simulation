@@ -1,0 +1,5 @@
+
+> gui: exec failure
+: No such file or directory
+main: pthread_mutex_unlock.c:98: __pthread_mutex_unlock_usercnt: Assertion `type == PTHREAD_MUTEX_ERRORCHECK_NP' failed.
+./test.sh: line 11: 24581 Aborted                 (core dumped) ./main

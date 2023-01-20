@@ -252,11 +252,10 @@ void start_simulation()
     create_patcher_employees();
     create_printer_machine();
 
-    for (int i = 0; i < 4; i++)
-        testEnqueueToPrintingQueue();
-    createThreads();
+    // for (int i = 0; i < 4; i++)
+    //     testEnqueueToPrintingQueue();
+    // createThreads();
 
-    start_flag = 1;
 }
 
 void create_generator_thread()
@@ -278,6 +277,7 @@ void create_employees_threads_type_A()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
+
             if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position[j][i]) == -1)
             {
                 perror("Employee A, thread creation : ");
@@ -422,7 +422,6 @@ void generator_routine(void *argptr)
                 {
                     generate_product(k, TYPE_B, j);
                     send_product_msg_to_ui(OBJECT_CREATED, type_B_pile[j][k].id, TYPE_B, MANUFACTURING_LINE_B1 + j, 0);
-                    count++;
                 }
                 if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1)
                 {
@@ -431,9 +430,6 @@ void generator_routine(void *argptr)
                 }
             }
         }
-        // printf("exited\n");
-        if (count > 50)
-            break;
 
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEC; j++)
         {
@@ -484,28 +480,14 @@ void employee_lineA(void *position)
     buf.payload.chocolate_type = TYPE_A;
     MsgType msg_type = OBJECT_MOVED;
     ItemType item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
+    
     if (index > 7 || linenum > 2)
     {
         perror("error with passing argument");
         clean_up();
         exit(1);
     }
-    // printf("index : %d, linenum : %d\n", index, linenum);
-
-    // switch (linenum)
-    // {
-    // case 0:
-    //     buf.payload.current_location = MANUFACTURING_LINE_A1;
-    //     break;
-    // case 1:
-    //     buf.payload.current_location = MANUFACTURING_LINE_A2;
-    //     break;
-    // case 2:
-    //     buf.payload.current_location = MANUFACTURING_LINE_A3;
-    //     break;
-    // }
+                
 
     Location current_location = MANUFACTURING_LINE_A1 + linenum;
 
@@ -514,6 +496,7 @@ void employee_lineA(void *position)
     int i = 0, j = 0;
     srand(g_Array_of_Threads_TypeA[linenum][index]);
     int step_time = (C_MIN_A + rand()) % C_MAX_A;
+    // printf("%d %d\n", linenum, index);
     while (1)
     {
 
@@ -543,10 +526,7 @@ void employee_lineA(void *position)
         }
         i = (i + 1) % PILESIZE;
         j++;
-        if (count >= 50)
-        {
-            break;
-        }
+       
     }
     if (f != 0)
         printf("A %d: %d items passed through this line\n", index, f);
@@ -563,8 +543,7 @@ void employee_lineB(void *position)
     buf.payload.chocolate_type = TYPE_B;
     buf.payload.msg_type = 1;
     buf.payload.item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
+   
     if (index > 5 || linenum > 1)
     {
         perror("error with passing argument");
@@ -572,15 +551,7 @@ void employee_lineB(void *position)
         exit(1);
     }
 
-    switch (linenum)
-    {
-    case 0:
-        buf.payload.current_location = MANUFACTURING_LINE_B1;
-        break;
-    case 1:
-        buf.payload.current_location = MANUFACTURING_LINE_B2;
-        break;
-    }
+    Location current_location = MANUFACTURING_LINE_B1 + linenum;
     buf.payload.index = index;
 
     int i = 0, j = 0;
@@ -598,7 +569,8 @@ void employee_lineB(void *position)
                 if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1'))
                 {
                     type_B_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
+                                        send_product_msg_to_ui(
+                        OBJECT_MOVED, type_A_pile[linenum][i].id, TYPE_B, current_location, index);
                     usleep(step_time);
                     if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0)
                     {
@@ -613,10 +585,6 @@ void employee_lineB(void *position)
         }
         i = (i + 1) % PILESIZE;
         j++;
-        if (count >= 50)
-        {
-            break;
-        }
     }
     if (f != 0)
         printf("B %d: %d items passed through this line\n", index, f);
@@ -633,8 +601,7 @@ void employee_lineC(void *position)
     buf.payload.chocolate_type = TYPE_C;
     buf.payload.msg_type = 1;
     buf.payload.item_type = PRODUCT;
-    while (start_flag == 0)
-        ;
+    
     if (index > 5 || linenum > 1)
     {
         perror("error with passing argument");
@@ -682,10 +649,6 @@ void employee_lineC(void *position)
         }
         i = (i + 1) % PILESIZE;
         j++;
-        if (count >= 50)
-        {
-            break;
-        }
     }
     if (f != 0)
         printf("C %d: %d items passed through this line\n", index, f);
@@ -693,8 +656,6 @@ void employee_lineC(void *position)
 
 void patcher_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
     int j = 0;
     int o = 0;
     message_buf buf;
@@ -792,8 +753,7 @@ void patcher_routine(void *argptr)
 
 void printer_routine(void *argptr)
 {
-    while (start_flag == 0)
-        ;
+    
     int j = 0;
     message_buf buf;
     while (1)
