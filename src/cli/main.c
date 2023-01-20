@@ -256,9 +256,6 @@ void start_simulation()
     create_employees_threads_type_C();
     create_patcher_employees();
     create_printer_machine();
-
-    // for (int i = 0; i < 4; i++)
-    //     testEnqueueToPrintingQueue();
     createThreads();
 }
 
@@ -675,8 +672,13 @@ void patcher_routine(void *argptr)
         }
         else if (*patch_counter == 9)
         {
-            send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, PRINTER, 3, PATCH, arr_to_delete, 10);
+            buf.mtype = 1;
+            buf.payload.id = *patch_id;
+            send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, current_location, 3, PATCH, arr_to_delete, 10);
+            msgsnd(printer_msgq_id, &buf, sizeof(buf), 0);
+
         }
+
 
         pthread_mutex_unlock(patch_mutex);
     }
@@ -684,31 +686,45 @@ void patcher_routine(void *argptr)
 
 void printer_routine(void *argptr)
 {
-    // // TODO set the
-    // int j = 0;
-    // message_buf buf;
-    // while (1)
-    // {
-    //     if (msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
-    //     {
-    //     }
-    //     else
-    //     {
-    //         printf("printer received msg\n");
-    //         buf.payload.item_type = PATCH;
-    //         buf.payload.current_location = PRINTER;
-    //         msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-    //         for (int i = 0; i < 10; i++)
-    //         {
-    //             // print date on patche node
-    //             usleep(PRINTER_TIME);
-    //         }
-    //         // append to patche queue
-    //     }
-    //     j++;
-    //     if (j == 1000) // termination condition needed
-    //         break;
-    // }
+    // TODO set the
+    int j = 0;
+    message_buf buf;
+    while (1)
+    {
+        if (msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
+        {
+            if (errno == ENOMSG)
+            { // no message in the queue
+                usleep(10000);
+                continue;
+            }
+
+            // if the error is not ENOMSG, then it is an error
+            perror("error in msgrcv in patcher routine");
+            exit(3);
+        }
+        else
+        {
+            printf("printer received msg\n");
+            reset_stdout();
+            buf.payload.item_type = PATCH;
+            buf.payload.current_location = PRINTER;
+            msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
+            for (int i = 0; i < 10; i++)
+            {
+                // print date on patche node
+                usleep(PRINTER_TIME);
+            }
+            // append to patche queue
+            send_product_msg_to_ui(OBJECT_MOVED, buf.payload.id, buf.payload.chocolate_type, PRINTER, 3, PATCH);
+
+            enqueueToQueue(buf.payload, &printingQueue_mutex, &FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+
+        }
+        // j++;
+        // if (j == 1000) // termination condition needed
+        //     break;
+    }
 }
 
 void join_all()
@@ -1220,7 +1236,7 @@ void insertToContainers()
         pthread_mutex_lock(&printingQueue_mutex);
         if (G_numberOfchocolatePatchesInPrintingQueue > 0)
         {
-            chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+            chocolate.id = dequeueNodeFromQueueNoInternalMutex(&FrontPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue).id;
             // Todo update index to ui
             if (chocolate.chocolate_type == TYPE_A)
             {
