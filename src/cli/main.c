@@ -1401,6 +1401,12 @@ void insertToTrucks()
             {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
                 sleep(2);
+                storage_area_box_count = 0;
+
+                pthread_mutex_lock(&delivery_mutex);
+                G_DELIVERED_A_BOXES += g_number_of_carton_boxs_truck_can_hold_from_typeA;
+                pthread_mutex_unlock(&delivery_mutex);
+
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
             }
             if (G_numberOfChocolateBoxs_Truck_B < g_number_of_carton_boxs_truck_can_hold_from_typeB)
@@ -1434,6 +1440,11 @@ void insertToTrucks()
             {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
                 sleep(2);
+                storage_area_box_count = 0;
+
+                pthread_mutex_lock(&delivery_mutex);
+                G_DELIVERED_B_BOXES += g_number_of_carton_boxs_truck_can_hold_from_typeB;
+                pthread_mutex_unlock(&delivery_mutex);
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
             }
             if (G_numberOfChocolateBoxs_Truck_C < g_number_of_carton_boxs_truck_can_hold_from_typeC)
@@ -1467,6 +1478,11 @@ void insertToTrucks()
             {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
                 sleep(2);
+                storage_area_box_count = 0;
+
+                pthread_mutex_lock(&delivery_mutex);
+                G_DELIVERED_C_BOXES += g_number_of_carton_boxs_truck_can_hold_from_typeC;
+                pthread_mutex_unlock(&delivery_mutex);
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
             }
 
@@ -1520,8 +1536,8 @@ void insertToStorageArea()
         pthread_mutex_lock(&G_mutexs_for_FillingTheCartonBoxes_Queues[0]);
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeA > 0)
         {
+            storage_area_box_count++;
 
-            // Todo update index And Location to ui
             chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontFillingTheCartonBoxesTypeAQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeA);
             chocolate.current_location = STORAGE_AREA;
             send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 0, chocolate.item_type);
@@ -1534,7 +1550,8 @@ void insertToStorageArea()
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB > 0)
         {
 
-            // Todo update index And Location to ui
+            storage_area_box_count++;
+
             chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontFillingTheCartonBoxesTypeBQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB);
             chocolate.current_location = STORAGE_AREA;
             send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 1, chocolate.item_type);
@@ -1546,7 +1563,8 @@ void insertToStorageArea()
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC > 0)
         {
 
-            // Todo update index And Location to ui
+            storage_area_box_count++;
+
             chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontFillingTheCartonBoxesTypeCQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC);
             chocolate.current_location = STORAGE_AREA;
             send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, 2, chocolate.item_type);
