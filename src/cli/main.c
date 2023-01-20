@@ -26,6 +26,8 @@ void employee_lineC(void *position);
 void patcher_routine(void *argptr);
 void printer_routine(void *argptr);
 
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index);
+
 //..................................new mohammad..................................
 
 struct chocolateNode
@@ -398,7 +400,7 @@ void generator_routine(void *argptr)
                 if (type_A_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_A, j);
-                    send_new_product_to_ui(type_A_pile[j][k].id, TYPE_A, MANUFACTURING_LINE_A1 + j, 0);
+                    send_product_msg_to_ui(OBJECT_CREATED, type_A_pile[j][k].id, TYPE_A, MANUFACTURING_LINE_A1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&A_pile_mutex[j][k]) == -1)
                 {
@@ -419,7 +421,7 @@ void generator_routine(void *argptr)
                 if (type_B_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_B, j);
-                    send_new_product_to_ui(type_B_pile[j][k].id, TYPE_B, MANUFACTURING_LINE_B1 + j, 0);
+                    send_product_msg_to_ui(OBJECT_CREATED, type_B_pile[j][k].id, TYPE_B, MANUFACTURING_LINE_B1 + j, 0);
                     count++;
                 }
                 if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1)
@@ -445,7 +447,7 @@ void generator_routine(void *argptr)
                 if (type_C_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_C, j);
-                    send_new_product_to_ui(type_C_pile[j][k].id, TYPE_C, MANUFACTURING_LINE_C1 + j, 0);
+                    send_product_msg_to_ui(OBJECT_CREATED, type_C_pile[j][k].id, TYPE_C, MANUFACTURING_LINE_C1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&C_pile_mutex[j][k]) == -1)
                 {
@@ -457,13 +459,13 @@ void generator_routine(void *argptr)
     }
 }
 
-void send_new_product_to_ui(int id, ChocolateType chocolate_type, Location location, int index)
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index)
 {
     message_buf buf;
     buf.mtype = 1;
     buf.payload.id = id;
     buf.payload.chocolate_type = chocolate_type;
-    buf.payload.msg_type = OBJECT_CREATED;
+    buf.payload.msg_type = msg_type;
     buf.payload.item_type = PRODUCT;
     buf.payload.current_location = location;
     buf.payload.index = index;
@@ -480,8 +482,8 @@ void employee_lineA(void *position)
     message_buf buf;
     buf.mtype = 1;
     buf.payload.chocolate_type = TYPE_A;
-    buf.payload.msg_type = 1;
-    buf.payload.item_type = PRODUCT;
+    MsgType msg_type = OBJECT_MOVED;
+    ItemType item_type = PRODUCT;
     while (start_flag == 0)
         ;
     if (index > 7 || linenum > 2)
@@ -492,15 +494,21 @@ void employee_lineA(void *position)
     }
     // printf("index : %d, linenum : %d\n", index, linenum);
 
-    switch (linenum)
-    {
-    case 0:
-        buf.payload.current_location = MANUFACTURING_LINE_A1;
-        break;
-    case 1:
-        buf.payload.current_location = MANUFACTURING_LINE_A2;
-        break;
-    }
+    // switch (linenum)
+    // {
+    // case 0:
+    //     buf.payload.current_location = MANUFACTURING_LINE_A1;
+    //     break;
+    // case 1:
+    //     buf.payload.current_location = MANUFACTURING_LINE_A2;
+    //     break;
+    // case 2:
+    //     buf.payload.current_location = MANUFACTURING_LINE_A3;
+    //     break;
+    // }
+
+    Location current_location = MANUFACTURING_LINE_A1 + linenum;
+
     buf.payload.index = index;
 
     int i = 0, j = 0;
@@ -517,7 +525,10 @@ void employee_lineA(void *position)
                 if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1')))
                 {
                     type_A_pile[linenum][i].progress[index] = '1';
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
+
+                    send_product_msg_to_ui(
+                        OBJECT_MOVED, type_A_pile[linenum][i].id, TYPE_A, current_location, index);
+
                     usleep(step_time);
                     if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0)
                     {
