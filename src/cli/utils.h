@@ -15,7 +15,6 @@ void clean_up();                                                         // clea
 void interrupt_sig_handler(int sig);                                     // signal handler for interrupts, to clean up resources
 void generate_product(int empty_index, ChocolateType type, int linenum); // generates a product
 
-int count = 0;
 int start_flag = 0;
 
 // Arrays of threads

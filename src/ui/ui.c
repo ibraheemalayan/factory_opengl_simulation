@@ -133,8 +133,8 @@ int read_and_handle_msg_queue(HashTable *ht)
         exit(3);
     }
 
-    // printf("received message:\n\n");
-    // print_message(&(message_queue_buffer.payload));
+    printf("received message:\n\n");
+    print_message(&(message_queue_buffer.payload));
 
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {

@@ -27,7 +27,7 @@
 #define PERSON 1L
 #define PILESIZE 10
 
-#define MAX_BOXES_PER_TRUCK 15
+#define MAX_BOXES_PER_TRUCK 18 // keep it even number
 
 enum ItemType
 {
