@@ -136,8 +136,13 @@ int read_and_handle_msg_queue(HashTable *ht)
     // printf("received message:\n\n");
     // print_message(&(message_queue_buffer.payload));
 
-    printf("received message:\n\n");
-    print_message(&(message_queue_buffer.payload));
+    if (message_queue_buffer.payload.chocolate_type == TYPE_A && message_queue_buffer.payload.current_location > MANUFACTURING_LINE_A3)
+    {
+        red_stdout();
+        printf("an invalid message: [type A in B queues]\n\n");
+        print_message(&(message_queue_buffer.payload));
+        reset_stdout();
+    }
 
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {
@@ -217,7 +222,7 @@ int read_and_handle_msg_queue(HashTable *ht)
         if (message_queue_buffer.payload.current_location < it->location_index || (it->location_index > B2_MANUFACTURING_LINE_Y_VALUE && message_queue_buffer.payload.index < it->index_in_queue))
         {
             red_stdout();
-            printf("ERROR: item %d moved backwards in a queue other than A/B lines\n", it->id);
+            printf("ERROR: item %d of type %d tried to moved backwards in a location other than A/B lines, location was %d, intended location %d\n", it->id, it->chocolate_type, it->location_index, message_queue_buffer.payload.current_location);
             reset_stdout();
             return 1;
         }

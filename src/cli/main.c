@@ -20,9 +20,14 @@ void join_all();
 int randomIntegerInRange(int lower, int upper);
 void employeeDoStepPerLine(void *time_for_emp_takes_to_finsh_step_per_line);
 void generator_routine(void *argptr);
+
+// TODELETE
 void employee_lineA(void *position);
 void employee_lineB(void *position);
 void employee_lineC(void *position);
+
+void manufacturing_line_employee(void *position);
+
 void patcher_routine(void *argptr);
 void printer_routine(void *argptr);
 
@@ -276,13 +281,14 @@ void create_employees_threads_type_A()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
+            position[j][i].type = TYPE_A;
 
-            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)employee_lineA, (void *)&position[j][i]) == -1)
+            if (pthread_create(&g_Array_of_Threads_TypeA[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee A, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -297,12 +303,13 @@ void create_employees_threads_type_B()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)employee_lineB, (void *)&position[j][i]) == -1)
+            position[j][i].type = TYPE_B;
+            if (pthread_create(&g_Array_of_Threads_TypeB[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee B, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -317,12 +324,13 @@ void create_employees_threads_type_C()
         {
             position[j][i].linenum = j;
             position[j][i].index = i;
-            if (pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)employee_lineC, (void *)&position[j][i]) == -1)
+            position[j][i].type = TYPE_C;
+            if (pthread_create(&g_Array_of_Threads_TypeC[j][i], NULL, (void *)manufacturing_line_employee, (void *)&position[j][i]) == -1)
             {
                 perror("Employee C, thread creation : ");
                 exit(1);
             }
-            usleep(50000);
+            usleep(80000);
         }
     }
 }
@@ -384,7 +392,7 @@ void generator_routine(void *argptr)
         }
     }
 
-    for (i = 0; i < 100; i)
+    for (i = 0; i < 80; i)
     { // temporary because of lack of termination condition
 
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
@@ -407,6 +415,8 @@ void generator_routine(void *argptr)
                     exit(1);
                 }
             }
+
+            usleep(1000);
         }
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEB; j++)
         {
@@ -474,190 +484,288 @@ void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_ty
     msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
 }
 
-void employee_lineA(void *position)
+// void employee_lineA(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 7 || linenum > 2)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_A1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeA[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     // printf("%d %d\n", linenum, index);
+//     while (1)
+//     {
+
+//         i = find_product(type_A_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0)
+//             {
+//                 if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1')))
+//                 {
+
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_A_pile[linenum][i].id, TYPE_A, current_location, index);
+//                     type_A_pile[linenum][i].progress[index] = '1';
+
+//                     usleep(step_time);
+//                     if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_A;
+//                         buf.payload.chocolate_type = TYPE_A;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_A_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_A_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("A %d: %d items passed through this line\n", index, f);
+// }
+
+// void employee_lineB(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 5 || linenum > 1)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_B1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeB[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     while (1)
+//     {
+
+//         i = find_product(type_B_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0)
+//             {
+
+//                 if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1'))
+//                 {
+//                     type_B_pile[linenum][i].progress[index] = '1';
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_B_pile[linenum][i].id, TYPE_B, current_location, index);
+//                     usleep(step_time);
+//                     if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_B;
+//                         buf.payload.chocolate_type = TYPE_B;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_B_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_B_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("B %d: %d items passed through this line\n", index, f);
+// }
+
+// void employee_lineC(void *position)
+// {
+//     employee_information *temp = (employee_information *)position;
+//     int linenum = temp->linenum;
+//     int index = temp->index;
+//     int f = 0;
+
+//     if (index > 5 || linenum > 1)
+//     {
+//         perror("error with passing argument");
+//         clean_up();
+//         exit(1);
+//     }
+
+//     Location current_location = MANUFACTURING_LINE_C1 + linenum;
+
+//     int i = 0, j = 0;
+//     srand(g_Array_of_Threads_TypeC[linenum][index]);
+//     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+//     while (1)
+//     {
+
+//         i = find_product(type_C_pile[linenum], i);
+//         if (i != PILESIZE)
+//         {
+//             if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0)
+//             {
+//                 if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1')))
+//                 {
+//                     send_product_msg_to_ui(
+//                         OBJECT_MOVED, type_C_pile[linenum][i].id, TYPE_C, current_location, index);
+
+//                     type_C_pile[linenum][i].progress[index] = '1';
+//                     usleep(step_time);
+//                     if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0)
+//                     {
+//                         // send to patcher
+//                         message_buf buf;
+//                         buf.mtype = 1;
+//                         buf.payload.msg_type = OBJECT_MOVED;
+//                         buf.payload.index = index;
+//                         buf.payload.current_location = PATCHING_C;
+//                         buf.payload.chocolate_type = TYPE_C;
+//                         buf.payload.item_type = PRODUCT;
+//                         buf.payload.id = type_C_pile[linenum][i].id;
+//                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+//                         type_C_pile[linenum][i].id = 0;
+//                         f++;
+//                     }
+//                 }
+//                 pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
+//             }
+//         }
+//         i = (i + 1) % PILESIZE;
+//         j++;
+//     }
+//     if (f != 0)
+//         printf("C %d: %d items passed through this line\n", index, f);
+// }
+
+void manufacturing_line_employee(void *position)
 {
     employee_information *temp = (employee_information *)position;
     int linenum = temp->linenum;
     int index = temp->index;
+    ChocolateType type = temp->type;
     int f = 0;
 
-    if (index > 7 || linenum > 2)
+    if (type == TYPE_A && (index > 7 || linenum > 2))
     {
-        perror("error with passing argument");
+        perror("error passing argument for type A employee");
         clean_up();
         exit(1);
     }
-
+    else if (type == TYPE_B && (index > 5 || linenum > 1))
+    {
+        perror("error passing argument for type B employee");
+        clean_up();
+        exit(1);
+    }
+    else if (type == TYPE_C && (index > 5 || linenum > 1))
+    {
+        perror("error passing argument for type C employee");
+        clean_up();
+        exit(1);
+    }
+    chocolateProduct *array_ptr;
+    pthread_mutex_t *pile_mutex;
     Location current_location = MANUFACTURING_LINE_A1 + linenum;
 
+    switch (type)
+    {
+    case TYPE_A:
+        current_location = MANUFACTURING_LINE_A1 + linenum;
+        array_ptr = type_A_pile[linenum];
+        pile_mutex = A_pile_mutex[linenum];
+        break;
+    case TYPE_B:
+        current_location = MANUFACTURING_LINE_B1 + linenum;
+        array_ptr = type_B_pile[linenum];
+        pile_mutex = B_pile_mutex[linenum];
+        break;
+    case TYPE_C:
+        current_location = MANUFACTURING_LINE_C1 + linenum;
+        array_ptr = type_C_pile[linenum];
+        pile_mutex = C_pile_mutex[linenum];
+        break;
+    default:
+        perror("UNEXCPECTED TYPE: manufacturing_line_employee");
+        exit(4);
+        break;
+    }
+
     int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeA[linenum][index]);
-    int step_time = (C_MIN_A + rand()) % C_MAX_A;
-    // printf("%d %d\n", linenum, index);
+    srand(pthread_self());
+    int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
     while (1)
     {
 
-        i = find_product(type_A_pile[linenum], i);
+        i = find_product(array_ptr, i);
         if (i != PILESIZE)
         {
-            if (pthread_mutex_trylock(&A_pile_mutex[linenum][i]) == 0)
+            if (pthread_mutex_trylock(&pile_mutex[i]) == 0)
             {
-                if (type_A_pile[linenum][i].progress[index] == '0' && (index == 0 || type_A_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_A_pile[linenum][i].progress[3] == '1')))
+                if (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))
                 {
-
                     send_product_msg_to_ui(
-                        OBJECT_MOVED, type_A_pile[linenum][i].id, TYPE_A, current_location, index);
-                    type_A_pile[linenum][i].progress[index] = '1';
+                        OBJECT_MOVED, array_ptr[i].id, type, current_location, index);
 
+                    array_ptr[i].progress[index] = '1';
                     usleep(step_time);
-                    if (strcmp(type_A_pile[linenum][i].progress, "11111111") == 0)
+                    if (strcmp(array_ptr[i].progress, "11111000") == 0)
                     {
                         // send to patcher
                         message_buf buf;
                         buf.mtype = 1;
                         buf.payload.msg_type = OBJECT_MOVED;
                         buf.payload.index = index;
-                        buf.payload.current_location = PATCHING_A;
-                        buf.payload.chocolate_type = TYPE_A;
+                        buf.payload.current_location = PATCHING_A + type - 1;
+                        buf.payload.chocolate_type = type;
                         buf.payload.item_type = PRODUCT;
-                        buf.payload.id = type_A_pile[linenum][i].id;
+                        buf.payload.id = array_ptr[i].id;
                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_A_pile[linenum][i].id = 0;
+                        array_ptr[i].id = 0;
                         f++;
                     }
                 }
-                pthread_mutex_unlock(&A_pile_mutex[linenum][i]);
+                pthread_mutex_unlock(&pile_mutex[i]);
             }
         }
         i = (i + 1) % PILESIZE;
         j++;
     }
     if (f != 0)
-        printf("A %d: %d items passed through this line\n", index, f);
-}
-
-void employee_lineB(void *position)
-{
-    employee_information *temp = (employee_information *)position;
-    int linenum = temp->linenum;
-    int index = temp->index;
-    int f = 0;
-
-    if (index > 5 || linenum > 1)
-    {
-        perror("error with passing argument");
-        clean_up();
-        exit(1);
-    }
-
-    Location current_location = MANUFACTURING_LINE_B1 + linenum;
-
-    int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeB[linenum][index]);
-    int step_time = (C_MIN_B + rand()) % C_MAX_B;
-    while (1)
-    {
-
-        i = find_product(type_B_pile[linenum], i);
-        if (i != PILESIZE)
-        {
-            if (pthread_mutex_trylock(&B_pile_mutex[linenum][i]) == 0)
-            {
-
-                if (type_B_pile[linenum][i].progress[index] == '0' && (index == 0 || type_B_pile[linenum][i].progress[index - 1] == '1'))
-                {
-                    type_B_pile[linenum][i].progress[index] = '1';
-                    send_product_msg_to_ui(
-                        OBJECT_MOVED, type_B_pile[linenum][i].id, TYPE_B, current_location, index);
-                    usleep(step_time);
-                    if (strcmp(type_B_pile[linenum][i].progress, "11111100") == 0)
-                    {
-                        // send to patcher
-                        message_buf buf;
-                        buf.mtype = 1;
-                        buf.payload.msg_type = OBJECT_MOVED;
-                        buf.payload.index = index;
-                        buf.payload.current_location = PATCHING_B;
-                        buf.payload.chocolate_type = TYPE_B;
-                        buf.payload.item_type = PRODUCT;
-                        buf.payload.id = type_B_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_B_pile[linenum][i].id = 0;
-                        f++;
-                    }
-                }
-                pthread_mutex_unlock(&B_pile_mutex[linenum][i]);
-            }
-        }
-        i = (i + 1) % PILESIZE;
-        j++;
-    }
-    if (f != 0)
-        printf("B %d: %d items passed through this line\n", index, f);
-}
-
-void employee_lineC(void *position)
-{
-    employee_information *temp = (employee_information *)position;
-    int linenum = temp->linenum;
-    int index = temp->index;
-    int f = 0;
-
-    if (index > 5 || linenum > 1)
-    {
-        perror("error with passing argument");
-        clean_up();
-        exit(1);
-    }
-
-    Location current_location = MANUFACTURING_LINE_C1 + linenum;
-
-    int i = 0, j = 0;
-    srand(g_Array_of_Threads_TypeC[linenum][index]);
-    int step_time = (C_MIN_C + rand()) % C_MAX_C;
-    while (1)
-    {
-
-        i = find_product(type_C_pile[linenum], i);
-        if (i != PILESIZE)
-        {
-            if (pthread_mutex_trylock(&C_pile_mutex[linenum][i]) == 0)
-            {
-                if (type_C_pile[linenum][i].progress[index] == '0' && (index == 0 || type_C_pile[linenum][i].progress[index - 1] == '1' || (index > 3 && type_C_pile[linenum][i].progress[3] == '1')))
-                {
-                    send_product_msg_to_ui(
-                        OBJECT_MOVED, type_C_pile[linenum][i].id, TYPE_C, current_location, index);
-
-                    type_C_pile[linenum][i].progress[index] = '1';
-                    usleep(step_time);
-                    if (strcmp(type_C_pile[linenum][i].progress, "11111000") == 0)
-                    {
-                        // send to patcher
-                        message_buf buf;
-                        buf.mtype = 1;
-                        buf.payload.msg_type = OBJECT_MOVED;
-                        buf.payload.index = index;
-                        buf.payload.current_location = PATCHING_C;
-                        buf.payload.chocolate_type = TYPE_C;
-                        buf.payload.item_type = PRODUCT;
-                        buf.payload.id = type_C_pile[linenum][i].id;
-                        msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
-                        type_C_pile[linenum][i].id = 0;
-                        f++;
-                    }
-                }
-                pthread_mutex_unlock(&C_pile_mutex[linenum][i]);
-            }
-        }
-        i = (i + 1) % PILESIZE;
-        j++;
-    }
-    if (f != 0)
-        printf("C %d: %d items passed through this line\n", index, f);
+        printf("type:%d | %d: %d items passed through this line\n", type, index, f);
 }
 
 void patcher_routine(void *argptr)
 {
+    return;
     int j = 0;
     int o = 0;
     message_buf buf;
@@ -755,7 +863,7 @@ void patcher_routine(void *argptr)
 
 void printer_routine(void *argptr)
 {
-
+    // TODO set the
     int j = 0;
     message_buf buf;
     while (1)
@@ -766,6 +874,7 @@ void printer_routine(void *argptr)
         else
         {
             printf("printer received msg\n");
+            buf.payload.item_type = PATCH;
             buf.payload.current_location = PRINTER;
             msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
             for (int i = 0; i < 10; i++)

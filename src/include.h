@@ -161,6 +161,7 @@ typedef struct message_buf message_buf;
 typedef struct employee_information
 {
   int linenum;
+  ChocolateType type;
   int index;
 
 } employee_information;

@@ -39,11 +39,12 @@ typedef struct ItemObj ItemObj;
 void print_item(ItemObj *item)
 {
 
-    printf("{ id: %d, pkg_type: %d, chocolate_type: %d, index: %d, q: %p, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",
+    printf("{ id: %d, pkg_type: %d, chocolate_type: %d, index: %d, current_location: %d, q: %p, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",
            item->id,
            item->pkg_type,
            item->chocolate_type,
            item->index_in_queue,
+           item->location_index,
            item->current_location,
            item->current_coords.x,
            item->current_coords.y,
