@@ -623,48 +623,51 @@ void patcher_routine(void *argptr)
 
     while (1)
     {
-        // if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) != -1){
+        if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) != -1){
             
-        //     switch(buf.payload.chocolate_type){
-        //         case TYPE_A:
-        //             patch_counter = &type_A_patch;
-        //             arr_to_delete = arr_A;
-        //             current_location = PATCHING_A;
-        //             patch_id = &patch_id_A;
-        //             patch_mutex = &patch_mutex_A;
-        //             break;
-        //         case TYPE_B:
-        //             patch_counter = &type_B_patch;
-        //             arr_to_delete = arr_B;
-        //             current_location = PATCHING_B;
-        //             patch_id = &patch_id_B;
-        //             patch_mutex = &patch_mutex_B;
-        //             break;
-        //         case TYPE_C:
-        //             patch_counter = &type_C_patch;
-        //             arr_to_delete = arr_C;
-        //             current_location = PATCHING_C;
-        //             patch_id = &patch_id_C;
-        //             patch_mutex = &patch_mutex_C;
-        //             break;
-        //         default:
-        //             perror("UNEXCPECTED TYPE: patcher");
-        //             exit(4);
-        //             break;
-        //     }
-        // pthread_mutex_lock(patch_mutex);
-        // arr_to_delete[*patch_counter] = buf.payload.id;
-        // *patch_counter = (*patch_counter+1)%10;
+            switch(buf.payload.chocolate_type){
+                case TYPE_A:
+                    patch_counter = &type_A_patch;
+                    arr_to_delete = arr_A;
+                    current_location = PATCHING_A;
+                    patch_id = &patch_id_A;
+                    patch_mutex = &patch_mutex_A;
+                    break;
+                case TYPE_B:
+                    patch_counter = &type_B_patch;
+                    arr_to_delete = arr_B;
+                    current_location = PATCHING_B;
+                    patch_id = &patch_id_B;
+                    patch_mutex = &patch_mutex_B;
+                    break;
+                case TYPE_C:
+                    patch_counter = &type_C_patch;
+                    arr_to_delete = arr_C;
+                    current_location = PATCHING_C;
+                    patch_id = &patch_id_C;
+                    patch_mutex = &patch_mutex_C;
+                    break;
+                default:
+                    perror("UNEXCPECTED TYPE: patcher");
+                    exit(4);
+                    break;
+        }
+        pthread_mutex_lock(patch_mutex);
+        arr_to_delete[*patch_counter] = buf.payload.id;
+        *patch_counter = (*patch_counter+1)%10;
 
-        // if (*patch_counter == 1){
-        //     *patch_id = generate_uniq_id();
-        //     send_product_msg_to_ui(OBJECT_CREATED, *patch_id, buf.payload.chocolate_type, current_location, 0, PATCH);
-        // }
-        // else if (*patch_counter == 10)
-        //     send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, PRINTER, 0, PATCH,arr_to_delete,10);
+        if (*patch_counter == 1){
+            *patch_id = generate_uniq_id();
+            send_product_msg_to_ui(OBJECT_CREATED, *patch_id, buf.payload.chocolate_type, current_location, 0, PATCH);
+        }
+        else if (*patch_counter == 10)
+            send_product_msg_to_ui_with_delete(OBJECT_MOVED, *patch_id, buf.payload.chocolate_type, PRINTER, 0, PATCH,arr_to_delete,10);
+        
+        pthread_mutex_unlock(patch_mutex);
 
-        // }
-        // pthread_mutex_unlock(patch_mutex);
+        }
+
+            usleep(10000);
 
     }
 }
@@ -754,7 +757,7 @@ void load_user_defined_values()
         if (lineNumber == 1)
         {
             printf("%s\n", line);
-            // Splite the line
+            // Split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -763,7 +766,7 @@ void load_user_defined_values()
         else if (lineNumber == 2)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -772,7 +775,7 @@ void load_user_defined_values()
         else if (lineNumber == 3)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -781,7 +784,7 @@ void load_user_defined_values()
         else if (lineNumber == 4)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -790,7 +793,7 @@ void load_user_defined_values()
         else if (lineNumber == 5)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -799,7 +802,7 @@ void load_user_defined_values()
         else if (lineNumber == 6)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -808,7 +811,7 @@ void load_user_defined_values()
         else if (lineNumber == 7)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -817,7 +820,7 @@ void load_user_defined_values()
         else if (lineNumber == 8)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -826,7 +829,7 @@ void load_user_defined_values()
         else if (lineNumber == 9)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -835,7 +838,7 @@ void load_user_defined_values()
         else if (lineNumber == 10)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -844,7 +847,7 @@ void load_user_defined_values()
         else if (lineNumber == 11)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -853,7 +856,7 @@ void load_user_defined_values()
         else if (lineNumber == 12)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -862,7 +865,7 @@ void load_user_defined_values()
         else if (lineNumber == 13)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
@@ -871,7 +874,7 @@ void load_user_defined_values()
         else if (lineNumber == 14)
         {
             printf("%s\n", line);
-            // Splite the line
+            // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
             ptr = strtok(NULL, delim);
