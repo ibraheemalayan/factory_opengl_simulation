@@ -592,6 +592,7 @@ void manufacturing_line_employee(void *position)
                         buf.payload.id = array_ptr[i].id;
                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
                         send_product_msg_to_ui(
+
                             buf.payload.msg_type, array_ptr[i].id, type, buf.payload.current_location, 0, PRODUCT);
                         array_ptr[i].id = 0;
                         f++;
