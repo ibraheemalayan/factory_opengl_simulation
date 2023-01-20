@@ -5,6 +5,11 @@
         "ui_helper.h": "c",
         "constants.h": "c",
         "glut.h": "c",
-        "local.h": "c"
+        "local.h": "c",
+        "cmath": "c",
+        "exception": "c",
+        "type_traits": "c",
+        "limits": "c",
+        "typeinfo": "c"
     }
 }

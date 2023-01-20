@@ -109,7 +109,7 @@ enum Location
 typedef enum Location Location;
 typedef enum ChocolateType ChocolateType;
 typedef enum ItemType ItemType;
-
+/*
 enum MsgType
 {
   OBJECT_CREATED = 1,
@@ -119,7 +119,7 @@ enum MsgType
 };
 
 typedef enum MsgType MsgType;
-
+*/
 struct message_payload
 {
   long msg_type; // first field of the message struct should be the message type
@@ -153,7 +153,7 @@ struct message_payload
 //     ids_to_delete = NULL
 
 typedef struct message_payload message_payload;
-
+/*
 struct message_buf
 {
   long mtype; // first field of the message struct should be the message type
@@ -161,12 +161,16 @@ struct message_buf
 };
 
 typedef struct message_buf message_buf;
-
+*/
 struct Object
 {
   ChocolateType type;
   char progress[8];
   unsigned int id;
+  Location current_location;
+  ItemType pkg_type;
+  int index_in_queue;
+  
 } chocolateProduct;
 
 typedef struct message_payload message_payload;
