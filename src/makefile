@@ -12,19 +12,37 @@ compile_gui:
 	@echo "Compiling..."
 	gcc ui/ui.c -lGL -lGLU -lglut -lm -o bin/gui.o
 
+compile_random_gui:
+	@echo "Compiling..."
+	gcc ui/ui.c -D RANDOM -lGL -lGLU -lglut -lm -o bin/gui.o
+
 
 run_gui: compile_gui;
+	@echo "Running GUI..."
+	$(shell export DISPLAY=:0)
+	./bin/gui.o 2> ./bin/errorlog
+
+run_random_gui: compile_random_gui;
 	@echo "Running GUI..."
 	$(shell export DISPLAY=:0)
 	./bin/gui.o
 
 # Debug Standalone GUI
+compile_random_gui_debug:
+	@echo "Compiling..."
+	gcc  -D RANDOM ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/d_gui.o
+
 compile_gui_debug:
 	@echo "Compiling..."
-	gcc ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/d_gui.o
+	gcc  ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/d_gui.o
 
 
 debug_gui: compile_gui_debug;
+	@echo "Running GUI..."
+	$(shell export DISPLAY=:0)
+	gdb ./bin/d_gui.o
+
+debug_random_gui: compile_random_gui_debug;
 	@echo "Running GUI..."
 	$(shell export DISPLAY=:0)
 	gdb ./bin/d_gui.o
@@ -44,7 +62,7 @@ compile_all_for_debug:
 
 run_all: compile_all;
 	@echo "Running CLI..."
-	./bin/main.o $(RUN_ARGS)
+	./bin/main.o $(RUN_ARGS) 2> ./bin/errorlog
 
 debug_all: compile_all_for_debug;
 	@echo "Running CLI..."
@@ -64,3 +82,6 @@ run_test_server: test_compile_cli;
 run_test_client: test_compile_cli;
 	@echo "Running Test CLI..."
 	./bin/test2.o $(RUN_ARGS)
+
+clean :
+	rm ./bin/*.0

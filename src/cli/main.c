@@ -177,7 +177,7 @@ void testEnqueueToPrintingQueue();
 int main()
 {
 
-    // load_user_defined_values();
+    load_user_defined_values();
 
     create_and_setup_message_queues();
 
@@ -404,8 +404,10 @@ void generator_routine(void *argptr)
     }
 
     while (1)
-    { // temporary because of lack of termination condition
-
+    { 
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+        
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
         {
             for (int k = 0; k <= PILESIZE; k++)
@@ -575,13 +577,17 @@ void manufacturing_line_employee(void *position)
     MsgType m_type = (index == 0) ? OBJECT_CREATED : OBJECT_MOVED;
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
 
         i = find_product(array_ptr, i);
         if (i != PILESIZE)
         {
             if (pthread_mutex_trylock(&pile_mutex[i]) == 0)
             {
-                if (((type == TYPE_A) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))) || ((type == TYPE_C) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 2 && array_ptr[i].progress[3] == '1')))) || ((type == TYPE_B) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1')))))
+                if (((type == TYPE_A) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))) ||\
+                 ((type == TYPE_C) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 2 && array_ptr[i].progress[3] == '1')))) ||\
+                  ((type == TYPE_B) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1')))))
                 {
                     send_product_msg_to_ui(
                         m_type, array_ptr[i].id, type, current_location, index, PRODUCT);
@@ -621,6 +627,8 @@ void patcher_routine(void *argptr)
 
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
 
         if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), MTYPE, 0) == -1)
         {
@@ -703,6 +711,9 @@ void printer_routine(void *argptr)
     message_buf buf;
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+
         if (msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
         {
             if (errno == ENOMSG)
@@ -1244,6 +1255,9 @@ void insertToContainers()
     srand(pthread_self());
     while (1)
     {
+        if (storage_area_box_count >= g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+
         pthread_mutex_lock(&printingQueue_mutex);
         if (G_numberOfchocolatePatchesInPrintingQueue > 0)
         {
@@ -1453,6 +1467,9 @@ void fillingTheCartonBoxesA()
     message_payload chocolate2;
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+
         if (G_numberOfchocolatePatchesInContainerTypeA >= 2)
         {
 
@@ -1476,6 +1493,9 @@ void fillingTheCartonBoxesB()
     message_payload chocolate2;
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+
         if (G_numberOfchocolatePatchesInContainerTypeB >= 2)
         {
 
@@ -1499,6 +1519,9 @@ void fillingTheCartonBoxesC()
     message_payload chocolate2;
     while (1)
     {
+        if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+
         if (G_numberOfchocolatePatchesInContainerTypeC >= 2)
         {
 

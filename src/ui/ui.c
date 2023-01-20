@@ -39,6 +39,7 @@ void setup_message_queue()
     }
 }
 
+
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
 void paint_and_swap_frame()
@@ -115,9 +116,9 @@ void update_moving_items_locations()
     }
 }
 
+
 int read_and_handle_msg_queue(HashTable *ht)
 {
-
     message_buf message_queue_buffer;
 
     // msg_type set to Zero to read the first message in the queue regarless of it its type
@@ -271,6 +272,7 @@ void recursive_timed_update(int time)
         // keep reading messgaes until queue is empty
     }
 
+
     update_moving_items_locations();
     update_truck_locations();
 
@@ -363,9 +365,13 @@ int main(int argc, char **argv)
 
     ht = create_table(CAPACITY);
 
-    // create_random_items(locations_ptrs);
+    //create_random_items(locations_ptrs);
+
+
 
     setup_message_queue();
+
+
 
     glutMainLoop(); // Enter the event-processing loop
 
