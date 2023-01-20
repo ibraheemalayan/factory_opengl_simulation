@@ -135,13 +135,13 @@ int read_and_handle_msg_queue(HashTable *ht)
     // printf("received message:\n\n");
     // print_message(&(message_queue_buffer.payload));
 
-    if (message_queue_buffer.payload.item_type == CARTON_BOX)
-    {
-        red_stdout();
-        print_message(&(message_queue_buffer.payload));
-        printf("\n ids_to_delete : [%d, %d]", message_queue_buffer.payload.ids_to_delete[0], message_queue_buffer.payload.ids_to_delete[1]);
-        reset_stdout();
-    }
+    // if (message_queue_buffer.payload.item_type == CARTON_BOX)
+    // {
+    //     red_stdout();
+    //     print_message(&(message_queue_buffer.payload));
+    //     printf("\n ids_to_delete : [%d, %d]", message_queue_buffer.payload.ids_to_delete[0], message_queue_buffer.payload.ids_to_delete[1]);
+    //     reset_stdout();
+    // }
 
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {
@@ -156,6 +156,11 @@ int read_and_handle_msg_queue(HashTable *ht)
             current_location,
             message_queue_buffer.payload.current_location);
 
+        if (it->pkg_type == CARTON_BOX)
+        {
+            it->current_coords = get_queue_location_coords_for_index(locations_ptrs[CONTAINER_A + 1 - it->chocolate_type], 10);
+        }
+
         // printf(
         //     "created item with id: %d, index: %d, item_type: %d, chocolate_type: %d, current_location: %d\n\n",
         //     it->id, it->index_in_queue, it->pkg_type, it->chocolate_type, it->current_location);
@@ -169,8 +174,12 @@ int read_and_handle_msg_queue(HashTable *ht)
             int num_of_ids = (message_queue_buffer.payload.item_type == CARTON_BOX) ? 2 : 10;
             for (int i = 0; i < num_of_ids; i++)
             {
-                printf("deleting id: %d", message_queue_buffer.payload.ids_to_delete[i]);
-                ht_delete(ht, message_queue_buffer.payload.ids_to_delete[i]);
+
+                if (message_queue_buffer.payload.ids_to_delete[i] != 0)
+                {
+                    // printf("deleting id: %d", message_queue_buffer.payload.ids_to_delete[i]);
+                    ht_delete(ht, message_queue_buffer.payload.ids_to_delete[i]);
+                }
             }
         }
     }

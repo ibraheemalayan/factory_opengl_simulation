@@ -449,10 +449,11 @@ void generator_routine(void *argptr)
     }
 
     while (1)
-    { 
+    {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
-        
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
+
         for (j = 0; j < C_MANUFACTURING_LINES_TYPEA; j++)
         {
             for (int k = 0; k <= PILESIZE; k++)
@@ -552,10 +553,9 @@ void send_product_msg_to_ui_with_delete(MsgType msg_type, int id, ChocolateType 
     buf.payload.current_location = location;
     buf.payload.chocolate_type = chocolate_type;
     buf.payload.item_type = item_type;
-    for (int i = 0; i < arr_size; i++){
+    for (int i = 0; i < arr_size; i++)
+    {
         buf.payload.ids_to_delete[i] = arr[i];
-        if (item_type == CARTON_BOX)
-            printf("%d =? %d\n", buf.payload.ids_to_delete[i], arr[i]);
     }
 
     buf.payload.index_in_queue = 0; // to suppress uninitialized warning
@@ -626,16 +626,17 @@ void manufacturing_line_employee(void *position)
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         i = find_product(array_ptr, i);
         if (i != PILESIZE)
         {
             if (pthread_mutex_trylock(&pile_mutex[i]) == 0)
             {
-                if (((type == TYPE_A) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))) ||\
-                 ((type == TYPE_C) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 2 && array_ptr[i].progress[3] == '1')))) ||\
-                  ((type == TYPE_B) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1')))))
+                if (((type == TYPE_A) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))) ||
+                    ((type == TYPE_C) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 2 && array_ptr[i].progress[3] == '1')))) ||
+                    ((type == TYPE_B) && (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1')))))
                 {
                     send_product_msg_to_ui(
                         m_type, array_ptr[i].id, type, current_location, index, PRODUCT);
@@ -676,7 +677,8 @@ void patcher_routine(void *argptr)
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), MTYPE, 0) == -1)
         {
@@ -760,7 +762,8 @@ void printer_routine(void *argptr)
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         if (msgrcv(printer_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
         {
@@ -776,7 +779,6 @@ void printer_routine(void *argptr)
         }
         else
         {
-            printf("received message\n");
             reset_stdout();
             buf.payload.item_type = PATCH;
             buf.payload.current_location = PRINTER;
@@ -1316,7 +1318,8 @@ void insertToContainers()
     while (1)
     {
         if (storage_area_box_count >= g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         pthread_mutex_lock(&printingQueue_mutex);
         if (G_numberOfchocolatePatchesInPrintingQueue > 0)
@@ -1390,14 +1393,15 @@ void insertToTrucks()
                     }
 
                     G_numberOfChocolateBoxs_Truck_A++;
-                    printf("\n\nG_numberOfChocolateBoxs_Truck_A:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_A, save_index_mutex + 1, G_round);
+                    // printf("\n\nG_numberOfChocolateBoxs_Truck_A:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_A, save_index_mutex + 1, G_round);
                     break;
                 }
-            }else {
+            }
+            else
+            {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
                 sleep(2);
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
-
             }
             if (G_numberOfChocolateBoxs_Truck_B < g_number_of_carton_boxs_truck_can_hold_from_typeB)
             {
@@ -1422,10 +1426,12 @@ void insertToTrucks()
                         enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex], &FrontTruckQueue3, &RearTruckQueue3, &G_numberOfChocolateBoxsIn_Truck3);
                     }
                     G_numberOfChocolateBoxs_Truck_B++;
-                    printf("\n\nG_numberOfChocolateBoxs_Truck_B:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_B, save_index_mutex + 1, G_round);
+                    // printf("\n\nG_numberOfChocolateBoxs_Truck_B:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_B, save_index_mutex + 1, G_round);
                     break;
                 }
-            }else {
+            }
+            else
+            {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
                 sleep(2);
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
@@ -1453,10 +1459,12 @@ void insertToTrucks()
                         enqueueToQueue(chocolate, &G_mutexs_on_Trucks_Queues[save_index_mutex], &FrontTruckQueue3, &RearTruckQueue3, &G_numberOfChocolateBoxsIn_Truck3);
                     }
                     G_numberOfChocolateBoxs_Truck_C++;
-                    printf("\n\nG_numberOfChocolateBoxs_Truck_C:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_C, save_index_mutex + 1, G_round);
+                    // printf("\n\nG_numberOfChocolateBoxs_Truck_C:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_C, save_index_mutex + 1, G_round);
                     break;
                 }
-            }else {
+            }
+            else
+            {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
                 sleep(2);
                 send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
@@ -1546,7 +1554,7 @@ void insertToStorageArea()
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
         sleep(1);
-        }
+    }
 }
 
 void fillingTheCartonBoxesA()
@@ -1556,7 +1564,8 @@ void fillingTheCartonBoxesA()
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         if (G_numberOfchocolatePatchesInContainerTypeA >= 2)
         {
@@ -1585,7 +1594,8 @@ void fillingTheCartonBoxesB()
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         if (G_numberOfchocolatePatchesInContainerTypeB >= 2)
         {
@@ -1615,7 +1625,8 @@ void fillingTheCartonBoxesC()
     while (1)
     {
         if (storage_area_box_count > g_maximum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
-            while( storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area);
+            while (storage_area_box_count > g_minimum_number_threshold_of_manufactured_chocolate_carton_boxes_in_the_storage_area)
+                ;
 
         if (G_numberOfchocolatePatchesInContainerTypeC >= 2)
         {
@@ -1632,7 +1643,7 @@ void fillingTheCartonBoxesC()
             chocolate1.current_location = STORAGE_AREA;
             chocolate1.item_type = CARTON_BOX;
 
-            sleep (CONTAINER_TIME);
+            sleep(CONTAINER_TIME);
 
             send_product_msg_to_ui_with_delete(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type, chocolate1.ids_to_delete, 2);
             sleep(CONTAINER_TIME);

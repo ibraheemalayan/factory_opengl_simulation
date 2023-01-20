@@ -31,8 +31,8 @@ ItemObj *create_item_obj(int id, int index, ItemType pkg_type, ChocolateType cho
     // printf("Creating item with id: %d, index: %d, pkg_type: %d, chocolate_type: %d, location: %d", id, index, pkg_type, chocolate_type, current_location);
 
     // FIXME
-    item->current_coords.x = -1000 + id * 10;
-    item->current_coords.y = id * 20;
+    item->current_coords.x = -1000 + id;
+    item->current_coords.y = 500;
 
     return item;
 }
