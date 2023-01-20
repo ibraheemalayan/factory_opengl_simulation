@@ -136,13 +136,13 @@ int read_and_handle_msg_queue(HashTable *ht)
     // printf("received message:\n\n");
     // print_message(&(message_queue_buffer.payload));
 
-    if (message_queue_buffer.payload.chocolate_type == TYPE_A && message_queue_buffer.payload.current_location > MANUFACTURING_LINE_A3)
-    {
-        red_stdout();
-        printf("an invalid message: [type A in B queues]\n\n");
-        print_message(&(message_queue_buffer.payload));
-        reset_stdout();
-    }
+    // if (message_queue_buffer.payload.chocolate_type == TYPE_A && message_queue_buffer.payload.current_location > PATCHING_A)
+    // {
+    //     red_stdout();
+    //     printf("an invalid message: [type A in B queues]\n\n");
+    //     print_message(&(message_queue_buffer.payload));
+    //     reset_stdout();
+    // }
 
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {

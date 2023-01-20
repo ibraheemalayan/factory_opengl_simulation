@@ -90,7 +90,7 @@
 #define TELLER_Bx_Y_VALUE -150
 
 #define PADDING_BETWEEN_OBJECTS 35
-#define STEP_SIZE 20
+#define STEP_SIZE 30
 #define TRUCK_STEP_SIZE 5
 
 #define MAX_SPEED_PER_FRAM 0.4
