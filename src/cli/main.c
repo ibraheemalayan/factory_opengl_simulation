@@ -92,19 +92,19 @@ struct chocolateNode *RearTruckQueue3 = NULL;
 long ids_of_A_employees[24];
 
 // Mutex on printing Queue
-pthread_mutex_t printingQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t printingQueue_mutex;
 
 // Mutex on Container QueueS // index 0:A, 1:B, 2:C
-pthread_mutex_t G_mutexs_for_Container_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t G_mutexs_for_Container_Queues[3] = {0};
 
 // Mutex on THE Filling  Carton Boxes Queues // index 0:A, 1:B, 2:C
-pthread_mutex_t G_mutexs_for_FillingTheCartonBoxes_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t G_mutexs_for_FillingTheCartonBoxes_Queues[3] = {0};
 
 // Mutex on Storage Area Queues // index 0:A, 1:B, 2:C
-pthread_mutex_t G_mutexs_for_StorageArea_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t G_mutexs_for_StorageArea_Queues[3] = {0};
 
 // Mutex on Trucks queues // index 0:1, 1:2, 2:3
-pthread_mutex_t G_mutexs_on_Trucks_Queues[3] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t G_mutexs_on_Trucks_Queues[3] = {0};
 
 long queue_sizes[20];
 
@@ -137,7 +137,7 @@ int G_numberOfChocolateBoxsIn_Truck3 = 0;
 int G_Trucks_Order = 1; // 1:2:3
 int G_round = 0;
 
-pthread_mutex_t delivery_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t delivery_mutex;
 
 int G_DELIVERED_A_BOXES = 0;
 int G_DELIVERED_B_BOXES = 0;
@@ -255,6 +255,50 @@ void initiate_mutexes()
     if (pthread_mutex_init(&id_mutex, NULL) == -1)
     {
         perror("id mutex :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&delivery_mutex, NULL) == -1)
+    {
+        perror("delivery mutex :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&printingQueue_mutex, NULL) == -1)
+    {
+        perror("printing queue mutex :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&G_mutexs_for_Container_Queues[0], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_Container_Queues[1], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_Container_Queues[2], NULL) == -1)
+    {
+        perror("G_mutexs_for_Container_Queues :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&G_mutexs_for_FillingTheCartonBoxes_Queues[0], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_FillingTheCartonBoxes_Queues[1], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_FillingTheCartonBoxes_Queues[2], NULL) == -1)
+    {
+        perror("G_mutexs_for_FillingTheCartonBoxes_Queues :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&G_mutexs_for_StorageArea_Queues[0], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_StorageArea_Queues[1], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_for_StorageArea_Queues[2], NULL) == -1)
+    {
+        perror("G_mutexs_for_StorageArea_Queues :");
+        exit(1);
+    }
+
+    if (pthread_mutex_init(&G_mutexs_on_Trucks_Queues[0], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_on_Trucks_Queues[1], NULL) == -1 ||
+        pthread_mutex_init(&G_mutexs_on_Trucks_Queues[2], NULL) == -1)
+    {
+        perror("G_mutexs_on_Trucks_Queues :");
         exit(1);
     }
 }
@@ -728,10 +772,10 @@ void printer_routine(void *argptr)
         }
         else
         {
-            printf("printer received msg\n");
             reset_stdout();
             buf.payload.item_type = PATCH;
             buf.payload.current_location = PRINTER;
+
             msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
             for (int i = 0; i < 10; i++)
             {
@@ -740,8 +784,9 @@ void printer_routine(void *argptr)
             }
             // append to patche queue
             send_product_msg_to_ui(OBJECT_MOVED, buf.payload.id, buf.payload.chocolate_type, PRINTER, 3, PATCH);
-
+            reset_stdout();
             enqueueToQueue(buf.payload, &printingQueue_mutex, &FrontPrinterQueue, &RearPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+            reset_stdout();
         }
         // j++;
         // if (j == 1000) // termination condition needed
@@ -804,7 +849,7 @@ void load_user_defined_values()
         lineNumber++;
         if (lineNumber == 1)
         {
-            printf("%s\n", line);
+
             // Split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -813,7 +858,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 2)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -822,7 +867,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 3)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -831,7 +876,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 4)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -840,7 +885,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 5)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -849,7 +894,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 6)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -858,7 +903,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 7)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -867,7 +912,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 8)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -876,7 +921,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 9)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -885,7 +930,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 10)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -894,7 +939,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 11)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -903,7 +948,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 12)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -912,7 +957,7 @@ void load_user_defined_values()
         }
         else if (lineNumber == 13)
         {
-            printf("%s\n", line);
+
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -921,7 +966,6 @@ void load_user_defined_values()
         }
         else if (lineNumber == 14)
         {
-            printf("%s\n", line);
             // split the line
             char delim[] = " ";
             char *ptr = strtok(line, delim);
@@ -944,8 +988,16 @@ void enqueueToQueue(message_payload chocolateInfo, pthread_mutex_t *mutex, struc
     }
     else
     {
-        // Todo update index to ui
         ptr->chocolateInfo.chocolate_type = chocolateInfo.chocolate_type;
+        ptr->chocolateInfo.id = chocolateInfo.id;
+        ptr->chocolateInfo.item_type = chocolateInfo.item_type;
+        ptr->chocolateInfo.index_in_queue = chocolateInfo.index_in_queue;
+        ptr->chocolateInfo.index = chocolateInfo.index;
+
+        for (int i = 0; i < MAX_BOXES_PER_TRUCK; i++)
+        {
+            ptr->chocolateInfo.ids_to_delete[i] = chocolateInfo.ids_to_delete[i];
+        }
 
         if ((*FrontQueue) == NULL)
         {
@@ -964,6 +1016,7 @@ void enqueueToQueue(message_payload chocolateInfo, pthread_mutex_t *mutex, struc
         (*numberOfchocolateItemInQueueTypeT)++;
     }
     pthread_mutex_unlock(mutex);
+    usleep(1000);
 }
 
 message_payload dequeueNodeFromQueueWithInternalMutex(pthread_mutex_t *mutex, struct chocolateNode **FrontQueue, int *numberOfchocolateItemInQueueTypeT)
@@ -997,7 +1050,9 @@ message_payload dequeueNodeFromQueueNoInternalMutex(struct chocolateNode **Front
     // Todo update index to ui
     if ((*FrontQueue) == NULL)
     {
+        red_stdout();
         printf("Underflow dequeueNodeFromQueue\n");
+        reset_stdout();
         return chocolate;
     }
     else
@@ -1261,8 +1316,9 @@ void insertToContainers()
         pthread_mutex_lock(&printingQueue_mutex);
         if (G_numberOfchocolatePatchesInPrintingQueue > 0)
         {
-            chocolate.id = dequeueNodeFromQueueNoInternalMutex(&FrontPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue).id;
-            // Todo update index to ui
+
+            chocolate = dequeueNodeFromQueueNoInternalMutex(&FrontPrinterQueue, &G_numberOfchocolatePatchesInPrintingQueue);
+
             if (chocolate.chocolate_type == TYPE_A)
             {
                 chocolate.current_location = CONTAINER_A;
@@ -1278,10 +1334,18 @@ void insertToContainers()
                 chocolate.current_location = CONTAINER_C;
                 enqueueToQueue(chocolate, &G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &RearContainerTypeCQueue, &G_numberOfchocolatePatchesInContainerTypeC);
             }
-            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, rand() % 30, PATCH);
+            else
+            {
+                red_stdout();
+                printf("error in insertToContainers");
+                reset_stdout();
+                exit(7);
+            }
+
+            send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, chocolate.current_location, randomIntegerInRange(0, 10), PATCH);
         }
-        usleep(50000);
         pthread_mutex_unlock(&printingQueue_mutex);
+        usleep(50000);
     }
 }
 
@@ -1303,6 +1367,7 @@ void insertToTrucks()
                 {
                     chocolate = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[0], &FrontStoragAreaTypeAQueue, &G_numberOfChocolateBoxsInStorageAreaTypeA);
                     pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                    usleep(50000);
                     if (save_index_mutex == 0)
                     {
                         send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
@@ -1330,6 +1395,7 @@ void insertToTrucks()
                 {
                     chocolate = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[1], &FrontStoragAreaTypeBQueue, &G_numberOfChocolateBoxsInStorageAreaTypeB);
                     pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                    usleep(50000);
                     if (save_index_mutex == 0)
                     {
                         send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
@@ -1356,6 +1422,7 @@ void insertToTrucks()
                 {
                     chocolate = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_StorageArea_Queues[2], &FrontStoragAreaTypeCQueue, &G_numberOfChocolateBoxsInStorageAreaTypeC);
                     pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+                    usleep(50000);
                     if (save_index_mutex == 0)
                     {
                         send_product_msg_to_ui(OBJECT_MOVED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
@@ -1394,6 +1461,7 @@ void insertToTrucks()
                 G_numberOfChocolateBoxs_Truck_C = 0;
             }
             pthread_mutex_unlock(&G_mutexs_on_Trucks_Queues[save_index_mutex]);
+            usleep(50000);
         }
     }
 }
@@ -1434,6 +1502,7 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[0], &FrontStoragAreaTypeAQueue, &RearStoragAreaTypeAQueue, &G_numberOfChocolateBoxsInStorageAreaTypeA);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[0]);
+        usleep(50000);
 
         pthread_mutex_lock(&G_mutexs_for_FillingTheCartonBoxes_Queues[1]);
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB > 0)
@@ -1446,6 +1515,7 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[1], &FrontStoragAreaTypeBQueue, &RearStoragAreaTypeBQueue, &G_numberOfChocolateBoxsInStorageAreaTypeB);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[1]);
+        usleep(50000);
 
         pthread_mutex_lock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC > 0)
@@ -1458,6 +1528,7 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[2], &FrontStoragAreaTypeCQueue, &RearStoragAreaTypeCQueue, &G_numberOfChocolateBoxsInStorageAreaTypeC);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
+        usleep(50000);
     }
 }
 
@@ -1476,12 +1547,14 @@ void fillingTheCartonBoxesA()
             // Todo update index And Location to ui and update id
             chocolate1 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolatePatchesInContainerTypeA);
             chocolate2 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[0], &FrontContainerTypeAQueue, &G_numberOfchocolatePatchesInContainerTypeA);
+            chocolate1.ids_to_delete[0] = chocolate1.id;
+            chocolate1.ids_to_delete[1] = chocolate2.id;
+
+            chocolate1.id = generate_uniq_id();
+
             chocolate1.current_location = CONTAINER_A;
             chocolate1.item_type = CARTON_BOX;
-            chocolate2.current_location = CONTAINER_A;
-            chocolate2.item_type = CARTON_BOX;
-            chocolate1.id = generate_uniq_id();
-            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 0, chocolate1.item_type);
+            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type);
             enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[0], &FrontFillingTheCartonBoxesTypeAQueue, &RearFillingTheCartonBoxesTypeAQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeA);
         }
     }
@@ -1502,12 +1575,16 @@ void fillingTheCartonBoxesB()
             // Todo update index And Location to ui and update id
             chocolate1 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[1], &FrontContainerTypeBQueue, &G_numberOfchocolatePatchesInContainerTypeB);
             chocolate2 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[1], &FrontContainerTypeBQueue, &G_numberOfchocolatePatchesInContainerTypeB);
+
+            chocolate1.ids_to_delete[0] = chocolate1.id;
+            chocolate1.ids_to_delete[1] = chocolate2.id;
+
+            chocolate1.id = generate_uniq_id();
+
             chocolate1.current_location = CONTAINER_B;
             chocolate1.item_type = CARTON_BOX;
-            chocolate2.current_location = CONTAINER_B;
-            chocolate2.item_type = CARTON_BOX;
-            chocolate1.id = generate_uniq_id();
-            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 0, chocolate1.item_type);
+
+            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type);
             enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[1], &FrontFillingTheCartonBoxesTypeBQueue, &RearFillingTheCartonBoxesTypeBQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB);
         }
     }
@@ -1528,12 +1605,16 @@ void fillingTheCartonBoxesC()
             // Todo update index And Location to ui and update id
             chocolate1 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &G_numberOfchocolatePatchesInContainerTypeC);
             chocolate2 = dequeueNodeFromQueueWithInternalMutex(&G_mutexs_for_Container_Queues[2], &FrontContainerTypeCQueue, &G_numberOfchocolatePatchesInContainerTypeC);
+
+            chocolate1.ids_to_delete[0] = chocolate1.id;
+            chocolate1.ids_to_delete[1] = chocolate2.id;
+
+            chocolate1.id = generate_uniq_id();
+
             chocolate1.current_location = CONTAINER_C;
             chocolate1.item_type = CARTON_BOX;
-            chocolate2.current_location = CONTAINER_C;
-            chocolate2.item_type = CARTON_BOX;
-            chocolate1.id = generate_uniq_id();
-            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 0, chocolate1.item_type);
+
+            send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type);
             enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[2], &FrontFillingTheCartonBoxesTypeCQueue, &RearFillingTheCartonBoxesTypeCQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC);
         }
     }
@@ -1612,6 +1693,7 @@ void check_conditions_for_simulation_termination()
     }
 
     pthread_mutex_unlock(&delivery_mutex);
+    usleep(50000);
 }
 void kill_after_n_minutes()
 {

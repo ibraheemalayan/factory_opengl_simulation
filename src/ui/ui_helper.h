@@ -272,7 +272,7 @@ void draw_locations(LocationObject *locations[])
 
 void print_message(message_payload *buf)
 {
-    printf("{\n\tmsg_type: %ld", buf->msg_type);
+    printf("{\n\tmsg_type: %d", buf->msg_type);
     printf("\n\titem_id: %d", buf->id);
     printf("\n\tchocolate_type: %d", buf->chocolate_type);
     printf("\n\titem_type: %d", buf->item_type);
