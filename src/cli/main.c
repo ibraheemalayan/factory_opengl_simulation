@@ -772,6 +772,7 @@ void printer_routine(void *argptr)
         }
         else
         {
+            printf("received message\n");
             reset_stdout();
             buf.payload.item_type = PATCH;
             buf.payload.current_location = PRINTER;
@@ -1613,6 +1614,8 @@ void fillingTheCartonBoxesC()
 
             chocolate1.current_location = CONTAINER_C;
             chocolate1.item_type = CARTON_BOX;
+
+            sleep (CONTAINER_TIME);
 
             send_product_msg_to_ui(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type);
             enqueueToQueue(chocolate1, &G_mutexs_for_FillingTheCartonBoxes_Queues[2], &FrontFillingTheCartonBoxesTypeCQueue, &RearFillingTheCartonBoxesTypeCQueue, &G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC);
