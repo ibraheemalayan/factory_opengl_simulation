@@ -35,7 +35,7 @@ chocolateProduct type_C_pile[C_MANUFACTURING_LINES_TYPEC][PILESIZE];
 
 int type_A_patch = 0;
 int type_B_patch = 0;
-int type_C_patch = 0;
+int type_C_patch = 0; 
 
 int arr_A[10];
 int arr_B[10];
