@@ -31,7 +31,7 @@ void manufacturing_line_employee(void *position);
 void patcher_routine(void *argptr);
 void printer_routine(void *argptr);
 
-void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index);
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type);
 
 //..................................new mohammad..................................
 
@@ -407,7 +407,6 @@ void generator_routine(void *argptr)
                 if (type_A_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_A, j);
-                    send_product_msg_to_ui(OBJECT_CREATED, type_A_pile[j][k].id, TYPE_A, MANUFACTURING_LINE_A1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&A_pile_mutex[j][k]) == -1)
                 {
@@ -430,7 +429,6 @@ void generator_routine(void *argptr)
                 if (type_B_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_B, j);
-                    send_product_msg_to_ui(OBJECT_CREATED, type_B_pile[j][k].id, TYPE_B, MANUFACTURING_LINE_B1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&B_pile_mutex[j][k]) == -1)
                 {
@@ -452,7 +450,6 @@ void generator_routine(void *argptr)
                 if (type_C_pile[j][k].id == 0)
                 {
                     generate_product(k, TYPE_C, j);
-                    send_product_msg_to_ui(OBJECT_CREATED, type_C_pile[j][k].id, TYPE_C, MANUFACTURING_LINE_C1 + j, 0);
                 }
                 if (pthread_mutex_unlock(&C_pile_mutex[j][k]) == -1)
                 {
@@ -464,7 +461,7 @@ void generator_routine(void *argptr)
     }
 }
 
-void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index)
+void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type)
 {
 
     message_buf buf;
@@ -475,9 +472,30 @@ void send_product_msg_to_ui(MsgType msg_type, int id, ChocolateType chocolate_ty
     buf.payload.index = index;
     buf.payload.current_location = location;
     buf.payload.chocolate_type = chocolate_type;
-    buf.payload.item_type = PRODUCT;
+    buf.payload.item_type = item_type;
 
     memset(buf.payload.ids_to_delete, 0, MAX_BOXES_PER_TRUCK);
+
+    buf.payload.index_in_queue = 0; // to suppress uninitialized warning
+
+    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
+}
+
+void send_product_msg_to_ui_with_delete(MsgType msg_type, int id, ChocolateType chocolate_type, Location location, int index, ItemType item_type, int arr[], int arr_size)
+{
+
+    message_buf buf;
+    buf.mtype = 1;
+
+    
+    buf.payload.msg_type = msg_type;
+    buf.payload.id = id;
+    buf.payload.index = index;
+    buf.payload.current_location = location;
+    buf.payload.chocolate_type = chocolate_type;
+    buf.payload.item_type = PRODUCT;
+    for (int i = 0; i <  arr_size; i++)
+        buf.payload.ids_to_delete[i] = arr[i];
 
     buf.payload.index_in_queue = 0; // to suppress uninitialized warning
 
@@ -694,12 +712,12 @@ void manufacturing_line_employee(void *position)
     }
     chocolateProduct *array_ptr;
     pthread_mutex_t *pile_mutex;
-    Location current_location = MANUFACTURING_LINE_A1 + linenum;
+    Location current_location;
     char done_string[8];
     switch (type)
     {
     case TYPE_A:
-        current_location = MANUFACTURING_LINE_A1 + linenum;
+        current_location = MANUFACTURING_LINE_A1 + linenum ;
         array_ptr = type_A_pile[linenum];
         pile_mutex = A_pile_mutex[linenum];
         snprintf(done_string,8,"11111111");
@@ -726,6 +744,7 @@ void manufacturing_line_employee(void *position)
     int i = 0, j = 0;
     srand(pthread_self());
     int step_time = (C_LINE_STEP_MIN + rand()) % C_LINE_STEP_MAX;
+    MsgType m_type = (index == 0)? OBJECT_CREATED:OBJECT_MOVED;
     while (1)
     {
 
@@ -737,7 +756,7 @@ void manufacturing_line_employee(void *position)
                 if (array_ptr[i].progress[index] == '0' && (index == 0 || array_ptr[i].progress[index - 1] == '1' || (index > 3 && array_ptr[i].progress[3] == '1')))
                 {
                     send_product_msg_to_ui(
-                        OBJECT_MOVED, array_ptr[i].id, type, current_location, index);
+                        m_type, array_ptr[i].id, type, current_location, index, PRODUCT);
 
                     array_ptr[i].progress[index] = '1';
                     usleep(step_time);
@@ -753,6 +772,8 @@ void manufacturing_line_employee(void *position)
                         buf.payload.item_type = PRODUCT;
                         buf.payload.id = array_ptr[i].id;
                         msgsnd(patcher_msgq_id, &buf, sizeof(buf), 0);
+                        send_product_msg_to_ui(
+                            buf.payload.msg_type, array_ptr[i].id, type, buf.payload.current_location, index, PATCH);
                         array_ptr[i].id = 0;
                         f++;
                     }
@@ -764,12 +785,12 @@ void manufacturing_line_employee(void *position)
         j++;
     }
     if (f != 0)
-        printf("type:%d | %d: %d items passed through this line\n", type, index, f);
+        printf("type:%d | %d: %d items passed through this employee\n", type, index, f);
 }
 
 void patcher_routine(void *argptr)
 {
-    return;
+    // return;
     int j = 0;
     int o = 0;
     message_buf buf;
@@ -779,90 +800,7 @@ void patcher_routine(void *argptr)
 
     while (1)
     {
-        if (msgrcv(patcher_msgq_id, &buf, sizeof(buf), 1, IPC_NOWAIT) == -1)
-        {
-        }
-        else
-        {
-            buf.mtype = 1;
-            switch (buf.payload.chocolate_type)
-            {
-            case TYPE_A:
-                buf.payload.current_location = PATCHING_A;
-                break;
-            case TYPE_B:
-                buf.payload.current_location = PATCHING_B;
-                break;
-            case TYPE_C:
-                buf.payload.current_location = PATCHING_C;
-                break;
-            }
-            send.payload.current_location = buf.payload.current_location;
-            msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-
-            if (buf.payload.chocolate_type == TYPE_A)
-            {
-                pthread_mutex_lock(&patch_mutex_A);
-                arr_A[type_A_patch] = buf.payload.id;
-                type_A_patch++;
-                if (type_A_patch == 10)
-                {
-                    type_A_patch = 0;
-                    send.payload.chocolate_type = TYPE_A;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_A[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_A);
-            }
-            else if (buf.payload.chocolate_type == TYPE_B)
-            {
-                pthread_mutex_lock(&patch_mutex_B);
-                type_B_patch++;
-                arr_B[type_B_patch] = buf.payload.id;
-                if (type_B_patch == 10)
-                {
-                    type_B_patch = 0;
-                    send.payload.chocolate_type = TYPE_B;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_B[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_B);
-            }
-            else if (buf.payload.chocolate_type == TYPE_C)
-            {
-                pthread_mutex_lock(&patch_mutex_C);
-                type_C_patch++;
-                arr_C[type_C_patch] = buf.payload.id;
-                if (type_C_patch == 10)
-                {
-                    type_C_patch = 0;
-                    send.payload.chocolate_type = TYPE_C;
-                    buf.payload.item_type = PATCH;
-                    buf.payload.id = generate_uniq_id();
-                    for (o = 0; o < 9; o++)
-                        buf.payload.ids_to_delete[o] = arr_C[o];
-                    msgsnd(ui_msgq_id, &buf, sizeof(buf), 0);
-                    msgsnd(printer_msgq_id, &send, sizeof(send), 0);
-                }
-                usleep(PATCHER_TIME);
-                pthread_mutex_unlock(&patch_mutex_C);
-            }
-        }
-        j++;
-        if (j == 1000) // termination condition
-            break;
     }
-    pthread_exit(0);
 }
 
 void printer_routine(void *argptr)
