@@ -551,7 +551,7 @@ void send_product_msg_to_ui_with_delete(MsgType msg_type, int id, ChocolateType 
     buf.payload.index = index;
     buf.payload.current_location = location;
     buf.payload.chocolate_type = chocolate_type;
-    buf.payload.item_type = PRODUCT;
+    buf.payload.item_type = item_type;
     for (int i = 0; i < arr_size; i++){
         buf.payload.ids_to_delete[i] = arr[i];
         if (item_type == CARTON_BOX)
@@ -1395,6 +1395,9 @@ void insertToTrucks()
                 }
             }else {
                 send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
+                sleep(2);
+                send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
+
             }
             if (G_numberOfChocolateBoxs_Truck_B < g_number_of_carton_boxs_truck_can_hold_from_typeB)
             {
@@ -1423,7 +1426,9 @@ void insertToTrucks()
                     break;
                 }
             }else {
-                send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_1, 0, chocolate.item_type);
+                send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
+                sleep(2);
+                send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_2, 0, chocolate.item_type);
             }
             if (G_numberOfChocolateBoxs_Truck_C < g_number_of_carton_boxs_truck_can_hold_from_typeC)
             {
@@ -1451,6 +1456,10 @@ void insertToTrucks()
                     printf("\n\nG_numberOfChocolateBoxs_Truck_C:%d   Truck :%d           G_round:%d\n\n", G_numberOfChocolateBoxs_Truck_C, save_index_mutex + 1, G_round);
                     break;
                 }
+            }else {
+                send_product_msg_to_ui(TRUCK_LEFT, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
+                sleep(2);
+                send_product_msg_to_ui(TRUCK_RETURNED, chocolate.id, chocolate.chocolate_type, TRUCK_3, 0, chocolate.item_type);
             }
 
             if (G_numberOfChocolateBoxs_Truck_A == g_number_of_carton_boxs_truck_can_hold_from_typeA && G_numberOfChocolateBoxs_Truck_B == g_number_of_carton_boxs_truck_can_hold_from_typeB && G_numberOfChocolateBoxs_Truck_C == g_number_of_carton_boxs_truck_can_hold_from_typeC)
@@ -1511,7 +1520,7 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[0], &FrontStoragAreaTypeAQueue, &RearStoragAreaTypeAQueue, &G_numberOfChocolateBoxsInStorageAreaTypeA);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[0]);
-        usleep(50000);
+        sleep(1);
 
         pthread_mutex_lock(&G_mutexs_for_FillingTheCartonBoxes_Queues[1]);
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeB > 0)
@@ -1524,8 +1533,7 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[1], &FrontStoragAreaTypeBQueue, &RearStoragAreaTypeBQueue, &G_numberOfChocolateBoxsInStorageAreaTypeB);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[1]);
-        usleep(50000);
-
+        sleep(1);
         pthread_mutex_lock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
         if (G_numberOfChocolateBoxsInTheFillingCartonBoxesQueueTypeC > 0)
         {
@@ -1537,8 +1545,8 @@ void insertToStorageArea()
             enqueueToQueue(chocolate, &G_mutexs_for_StorageArea_Queues[2], &FrontStoragAreaTypeCQueue, &RearStoragAreaTypeCQueue, &G_numberOfChocolateBoxsInStorageAreaTypeC);
         }
         pthread_mutex_unlock(&G_mutexs_for_FillingTheCartonBoxes_Queues[2]);
-        usleep(50000);
-    }
+        sleep(1);
+        }
 }
 
 void fillingTheCartonBoxesA()
@@ -1561,7 +1569,7 @@ void fillingTheCartonBoxesA()
 
             chocolate1.id = generate_uniq_id();
 
-            chocolate1.current_location = CONTAINER_A;
+            chocolate1.current_location = STORAGE_AREA;
             chocolate1.item_type = CARTON_BOX;
             send_product_msg_to_ui_with_delete(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type, chocolate1.ids_to_delete, 2);
             sleep(CONTAINER_TIME);
@@ -1591,7 +1599,7 @@ void fillingTheCartonBoxesB()
 
             chocolate1.id = generate_uniq_id();
 
-            chocolate1.current_location = CONTAINER_B;
+            chocolate1.current_location = STORAGE_AREA;
             chocolate1.item_type = CARTON_BOX;
             send_product_msg_to_ui_with_delete(OBJECT_CREATED, chocolate1.id, chocolate1.chocolate_type, chocolate1.current_location, 8, chocolate1.item_type, chocolate1.ids_to_delete, 2);
             sleep(CONTAINER_TIME);
@@ -1621,7 +1629,7 @@ void fillingTheCartonBoxesC()
 
             chocolate1.id = generate_uniq_id();
 
-            chocolate1.current_location = CONTAINER_C;
+            chocolate1.current_location = STORAGE_AREA;
             chocolate1.item_type = CARTON_BOX;
 
             sleep (CONTAINER_TIME);
