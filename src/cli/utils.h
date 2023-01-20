@@ -9,10 +9,48 @@ int ui_msgq_id;
 int patcher_msgq_id;
 int printer_msgq_id;
 
-void run_gui();                         // runs the gui
-void create_and_setup_message_queues(); // creates the message queue
-void clean_up();                        // cleans up the message queues, and kills the gui and all children
-void interrupt_sig_handler(int sig);    // signal handler for interrupts, to clean up resources
+void run_gui();                                                          // runs the gui
+void create_and_setup_message_queues();                                  // creates the message queue
+void clean_up();                                                         // cleans up the message queues, and kills the gui and all children
+void interrupt_sig_handler(int sig);                                     // signal handler for interrupts, to clean up resources
+void generate_product(int empty_index, ChocolateType type, int linenum); // generates a product
+
+int start_flag = 0;
+
+// Arrays of threads
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeA
+pthread_t g_Array_of_Threads_TypeA[3][8];
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeB
+pthread_t g_Array_of_Threads_TypeB[2][6];
+// Array of threads of_employees_per_manufacturing_line_each_executing_a_step_in_the_chocolate_manufacturing_process_typeC
+pthread_t g_Array_of_Threads_TypeC[2][5];
+// Generator thread; produces chocolate products to be processed
+pthread_t generator;
+// patcher employees
+pthread_t patcher_employees[2];
+// printer thread
+pthread_t printer;
+
+// array of pthread mutexes for each line
+pthread_mutex_t A_pile_mutex[3][PILESIZE];
+pthread_mutex_t B_pile_mutex[2][PILESIZE];
+pthread_mutex_t C_pile_mutex[2][PILESIZE];
+pthread_mutex_t patch_mutex_A;
+pthread_mutex_t patch_mutex_B;
+pthread_mutex_t patch_mutex_C;
+pthread_mutex_t id_mutex;
+// Arrays of mutex //Steps 1 to 6 have to happen in order
+
+int generate_uniq_id()
+{
+    int temp;
+    pthread_mutex_lock(&id_mutex);
+    temp = id_counter;
+    id_counter += 1;
+    pthread_mutex_unlock(&id_mutex);
+
+    return temp;
+}
 
 void run_gui()
 {
@@ -115,7 +153,7 @@ void create_and_setup_message_queues()
 
     patcher_queue_info.msg_qbytes = 20480;
 
-     // increase buffer size
+    // increase buffer size
     msgctl(patcher_msgq_id, IPC_SET, &patcher_queue_info);
 
     struct msqid_ds printer_queue_info;
@@ -129,13 +167,9 @@ void create_and_setup_message_queues()
 
     printer_queue_info.msg_qbytes = 20480;
 
-     // increase buffer size
+    // increase buffer size
     msgctl(printer_msgq_id, IPC_SET, &printer_queue_info);
 
-
-
-
-   
     green_stdout();
     printf("UI message queues have been created\n");
     reset_stdout();
@@ -159,7 +193,6 @@ void clean_up()
 
     msgctl(printer_msgq_id, IPC_RMID, NULL);
 
-
     // remove the queue file
     remove("ui_queue.bin");
 }
@@ -175,67 +208,57 @@ void interrupt_sig_handler(int sig)
 
 int randomIntegerInRange(int lower, int upper)
 {
-    srand(time(NULL)); // randomize seed
     return (rand() % (upper - lower + 1)) + lower;
 }
 // returns empty index if found, else returns PILESIZE
-int array_full(chocolateProduct arr[]){
+int array_full(chocolateProduct arr[])
+{
     printf("called");
-    for(int i = 0; i < PILESIZE; i++){
+    for (int i = 0; i < PILESIZE; i++)
+    {
         if (arr[i].id == 0)
             return i;
-        printf("id = %d\n",arr[i].id);
-            
+        printf("id = %d\n", arr[i].id);
     }
     return PILESIZE;
 }
 
-int find_product (chocolateProduct arr[], int start){
-    for(int i = start; i < PILESIZE; i++){
+int find_product(chocolateProduct arr[], int start)
+{
+    for (int i = start; i < PILESIZE; i++)
+    {
         if (arr[i].id != 0)
             return i;
     }
     return PILESIZE;
 }
 
-
-void generate_product(int empty_index, char type, int linenum){
-    srand(time(NULL));
-    ChocolateType type_num;
-    int id;
+void generate_product(int empty_index, ChocolateType type, int linenum)
+{
     char progress[8] = "00000000";
-    
 
-    switch(type){
-        case 'a' : 
-            type_num =TYPE_A;
-            break;
-        case 'b' : 
-            type_num =TYPE_B;
-            break;
-        case 'c' : 
-            type_num =TYPE_C;
-            break;
-    }
+    chocolateProduct *array_ptr;
 
-    id_counter+=(5 + rand()%100);
-    // printf("%d\t%d new\n", linenum,empty_index);
-    id = id_counter;
-    if (type == 'a'){
-        type_A_pile[linenum][empty_index].id = id_counter;
-        sprintf(type_A_pile[linenum][empty_index].progress, "%s",progress);
-        type_A_pile[linenum][empty_index].type = type_num;
-    } else if (type == 'b'){
-        type_B_pile[linenum][empty_index].id = id_counter;
-        sprintf(type_B_pile[linenum][empty_index].progress, "%s",progress);
-        type_B_pile[linenum][empty_index].type = type_num;
-    } else if (type == 'c'){
-        type_C_pile[linenum][empty_index].id = id_counter;
-        sprintf(type_C_pile[linenum][empty_index].progress, "%s",progress);
-        type_C_pile[linenum][empty_index].type = type_num;
-    }else{
+    switch (type)
+    {
+    case TYPE_A:
+        array_ptr = type_A_pile[linenum];
+        break;
+    case TYPE_B:
+        array_ptr = type_B_pile[linenum];
+        break;
+    case TYPE_C:
+        array_ptr = type_C_pile[linenum];
+        break;
+    default:
         perror("UNEXCPECTED: PRODUCT GENERATOR");
+        break;
     }
+
+    array_ptr[empty_index].id = generate_uniq_id();
+
+    snprintf(array_ptr[empty_index].progress, 8, "%s", progress);
+    array_ptr[empty_index].type = type;
 }
 
 #endif

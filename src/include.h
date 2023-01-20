@@ -27,19 +27,7 @@
 #define PERSON 1L
 #define PILESIZE 10
 
-enum MsgType
-{
-  ITEM = 1,
-  NEWPATCH,
-  NEWBOX,
-  NEWTRUCK,
-
-  PATCHUPDATED,
-  BOXUPDATED,
-  ITEMUPDATED,
-  TRUCKUPDATED,
-};
-#define MAX_BOXES_PER_TRUCK 15
+#define MAX_BOXES_PER_TRUCK 18 // keep it even number
 
 enum ItemType
 {
@@ -92,9 +80,7 @@ enum Location
   CARTON_BOX_C,
 
   // storage
-  STORAGE_AREA_A,
-  STORAGE_AREA_B,
-  STORAGE_AREA_C,
+  STORAGE_AREA,
 
   // trucks
   TRUCK_1,
@@ -122,7 +108,7 @@ typedef enum MsgType MsgType;
 */
 struct message_payload
 {
-  long msg_type; // first field of the message struct should be the message type
+  MsgType msg_type; // first field of the message struct should be the message type
   int id;
   int index; // index if inside a queue
   Location current_location;
@@ -130,6 +116,7 @@ struct message_payload
   ItemType item_type;
   // used to delete items when turned into another object
   int ids_to_delete[MAX_BOXES_PER_TRUCK]; // can be ids of items, patches, boxes
+  int index_in_queue;
 };
 
 // when an object is created:
@@ -153,6 +140,7 @@ struct message_payload
 //     ids_to_delete = NULL
 
 typedef struct message_payload message_payload;
+<<<<<<< HEAD
 /*
 struct message_buf
 {
@@ -162,30 +150,42 @@ struct message_buf
 
 typedef struct message_buf message_buf;
 */
+=======
+
+>>>>>>> 9ed9138721ee91bc2d2032cdd804da2bc14049a8
 struct Object
 {
   ChocolateType type;
   char progress[8];
+<<<<<<< HEAD
   unsigned int id;
   Location current_location;
   ItemType pkg_type;
   int index_in_queue;
   
 } chocolateProduct;
+=======
+  int id;
+  Location current_location;
+};
+>>>>>>> 9ed9138721ee91bc2d2032cdd804da2bc14049a8
 
-typedef struct message_payload message_payload;
+typedef struct Object chocolateProduct;
 
 struct message_buf
 {
   long mtype; // first field of the message struct should be the message type
   message_payload payload;
 };
+typedef struct message_buf message_buf;
 
 typedef struct employee_information
 {
   int linenum;
+  ChocolateType type;
   int index;
-}employee_information;
+
+} employee_information;
 
 typedef struct message_buf message_buf;
 

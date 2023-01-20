@@ -53,16 +53,14 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_locations(locations_ptrs);
 
-    draw_teller_text();
+    draw_text();
 
     draw_walls();
 
     drawMetalDetector();
 
-    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y, male_rolling_gate_rotation);
-    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y, female_rolling_gate_rotation);
-
-    // draw_rolling_gate(0, -100);
+    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, PRINTER_ANIMATION_Y_VALUE, male_rolling_gate_rotation);
+    draw_printer_animation(PRINTER_ANIMATION_X_VALUE, -PRINTER_ANIMATION_Y_VALUE, -female_rolling_gate_rotation);
 
     draw_items_in_queues();
 
@@ -99,7 +97,6 @@ void draw_items_in_queues()
 }
 void update_moving_items_locations()
 {
-    return;
     for (int i = 0; i < ht->size; i++)
     {
         if (ht->items[i])
@@ -139,6 +136,14 @@ int read_and_handle_msg_queue(HashTable *ht)
     // printf("received message:\n\n");
     // print_message(&(message_queue_buffer.payload));
 
+    if (message_queue_buffer.payload.chocolate_type == TYPE_A && message_queue_buffer.payload.current_location > MANUFACTURING_LINE_A3)
+    {
+        red_stdout();
+        printf("an invalid message: [type A in B queues]\n\n");
+        print_message(&(message_queue_buffer.payload));
+        reset_stdout();
+    }
+
     if (message_queue_buffer.payload.msg_type == OBJECT_CREATED)
     {
 
@@ -149,7 +154,12 @@ int read_and_handle_msg_queue(HashTable *ht)
             message_queue_buffer.payload.index,
             message_queue_buffer.payload.item_type,
             message_queue_buffer.payload.chocolate_type,
-            current_location);
+            current_location,
+            message_queue_buffer.payload.current_location);
+
+        // printf(
+        //     "created item with id: %d, index: %d, item_type: %d, chocolate_type: %d, current_location: %d\n\n",
+        //     it->id, it->index_in_queue, it->pkg_type, it->chocolate_type, it->current_location);
 
         it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
 
@@ -209,10 +219,19 @@ int read_and_handle_msg_queue(HashTable *ht)
         ItemObj *it = ht_search(ht, message_queue_buffer.payload.id);
         LocationObject *current_location = locations_ptrs[message_queue_buffer.payload.current_location];
 
+        if (message_queue_buffer.payload.current_location < it->location_index || (it->location_index > B2_MANUFACTURING_LINE_Y_VALUE && message_queue_buffer.payload.index < it->index_in_queue))
+        {
+            red_stdout();
+            printf("ERROR: item %d of type %d tried to moved backwards in a location other than A/B lines, location was %d, intended location %d\n", it->id, it->chocolate_type, it->location_index, message_queue_buffer.payload.current_location);
+            reset_stdout();
+            return 1;
+        }
+
         if (it->current_location != current_location)
         {
             it->current_location->current_items--;
             it->current_location = current_location;
+            it->location_index = message_queue_buffer.payload.current_location;
             current_location->current_items++;
 
             if (message_queue_buffer.payload.current_location >= TRUCK_1 || message_queue_buffer.payload.current_location <= TRUCK_3)
@@ -220,6 +239,7 @@ int read_and_handle_msg_queue(HashTable *ht)
                 it->index_in_queue = 0;
             }
         }
+
         it->index_in_queue = message_queue_buffer.payload.index;
 
         it->destination_coords = get_queue_location_coords_for_index(current_location, it->index_in_queue);
@@ -246,8 +266,8 @@ void recursive_timed_update(int time)
     update_moving_items_locations();
     update_truck_locations();
 
-    male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
-    female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
+    male_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
+    female_rolling_gate_rotation += ROLLING_CROSS_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)
@@ -256,30 +276,35 @@ void setup_ui(int argc, char **argv)
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
 
-    glutInitWindowSize(900, 450);                // Set the window's initial width & height
-    glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
-    glutCreateWindow("OIM Simulation");          // Create a window with the given title
-    glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
-    glutReshapeFunc(reshape);                    // Static display
-    glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
+    glutInitWindowSize(900, 450);                            // Set the window's initial width & height
+    glutInitWindowPosition(0, 0);                            // Position the window's initial top-left corner of the screen
+    glutCreateWindow("Chocolate Factory OpenGL Simulation"); // Create a window with the given title
+    glutDisplayFunc(paint_and_swap_frame);                   // Register display callback handler for window re-paint
+    glutReshapeFunc(reshape);                                // Static display
+    glutTimerFunc(0, recursive_timed_update, 0);             // Call function after specified amount of time
 
     background(); // Background color
 }
 
-// void create_random_people()
-// {
+int random_int_in_range(int lower, int upper)
+{
+    int r = (rand() % (upper - lower + 1)) + lower;
+    return r;
+}
 
-//     for (int i = 1; i < people_count; i++)
-//     {
+void create_random_items(LocationObject *locations[])
+{
 
-//         gender g = (rand() % 2) ? Male : Female;
-//         LocationObject *q = (g == Male) ? queue_A1 : queue_A2;
+    for (int i = 1; i < 100; i++)
+    {
 
-//         Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+        ChocolateType c_type = random_int_in_range(TYPE_A, TYPE_C);
+        ItemType p_type = random_int_in_range(PRODUCT, CARTON_BOX);
 
-//         p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
+        int rand_queue_index = random_int_in_range(1, 22);
 
-//         ht_insert(ht, p->id, p);
+        if (p_type == PRODUCT)
+        {
 
             rand_queue_index = random_int_in_range(1, 7);
         }
@@ -294,7 +319,7 @@ void setup_ui(int argc, char **argv)
 
         LocationObject *q = locations[rand_queue_index];
 
-        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q);
+        ItemObj *item_obj = create_item_obj(i, i % 2, p_type, c_type, q, rand_queue_index);
 
         item_obj->destination_coords = get_queue_location_coords_for_index(q, item_obj->index_in_queue);
 
@@ -318,8 +343,8 @@ int main(int argc, char **argv)
 
     setup_ui(argc, argv);
 
-    locations_ptrs[0] = NULL;
-    locations_ptrs[23] = NULL;
+    locations_ptrs[0] = NULL;  // location of undefined
+    locations_ptrs[23] = NULL; // location of delivered
 
     for (int i = 0; i <= 22; i++)
     {
@@ -330,7 +355,7 @@ int main(int argc, char **argv)
 
     ht = create_table(CAPACITY);
 
-    create_random_items(locations_ptrs);
+    // create_random_items(locations_ptrs);
 
     setup_message_queue();
 
