@@ -1,6 +1,6 @@
 # Choclate Factory Simulation
 
-A multi-threaded multi-processing application that simulates simulates the behavior of a chocolate-manufacturing factory., written in C & OpenGL, using Linux IPC techniques for synchronization. 
+A multi-threaded multi-processing application that simulates the behavior of a chocolate-manufacturing factory., written in C & OpenGL, using Linux IPC techniques for synchronization. 
 
 > this project is a part of the **Real Time Applications & Embedded Systems (ENCS4330)** course at [BZU](https://www.birzeit.edu).
 
