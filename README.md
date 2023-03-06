@@ -96,18 +96,3 @@ set follow-fork-mode child
 ```
 set follow-exec-mode new
 ```
-
-
-## TODOs
-
-#### Project
-
-* [ ] Project TODOs
-
-#### Backend
-
-* [ ] Backend TODOs
-
-#### UI
-
-* [ ] UI TODOs
